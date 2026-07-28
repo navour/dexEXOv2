@@ -87,7 +87,7 @@ sudo usermod -aG dialout $USER
 | `BROKER_HOST` | `127.0.0.1` | Broker 地址 |
 | `BROKER_PORT` | `9001` | Broker TCP 端口 |
 | `DEVICE_ADDRESSES` | `[...]` | 直连模式 BLE MAC 地址列表 |
-| `EXO_FORCE_BASELINE` | `4.903` | BLE 触觉零偏(N)，≤此值视为 0 |
+| `EXO_FORCE_BASELINE` | `4.903` | STM32最低有效输出阈值(N)，≤此值视为0，>此值保留原值 |
 
 ### 灵巧手角度
 
@@ -244,8 +244,8 @@ A: 检查 `/dev/ttyAMA0` 权限，确认波特率一致（1 Mbps），确认 ID 
 A: 确认 `ble_broker.py` 已运行；检查 MAC 地址；重启手套蓝牙。
 
 **Q: 外骨骼触觉始终为 0**  
-A: BLE 数据末5位全部 ≤ `EXO_FORCE_BASELINE(4.903)`，属于正常待机状态；  
-   若确实有力但仍为 0，可适当降低 `EXO_FORCE_BASELINE`。
+A: BLE 数据末5位全部 ≤ `EXO_FORCE_BASELINE(4.903)`，属于正常待机状态。
+   STM32当前无法分辨0～约4.9N；不应在树莓派端降低阈值来伪造低力测量。
 
 **Q: 状态机不进入 FORCE_ENTRY**  
 A: 灵巧手触觉未超过 `HAND_CONTACT_ON_N = 0.30 N`；  

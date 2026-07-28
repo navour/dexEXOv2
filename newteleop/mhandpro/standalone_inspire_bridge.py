@@ -10,6 +10,7 @@ import signal
 import socket
 import struct
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import Optional
@@ -19,7 +20,20 @@ from pymodbus.client import ModbusTcpClient
 
 ANGLE_SET_REGISTER = 1486
 ANGLE_ACT_REGISTER = 1546
+FORCE_ACT_REGISTER = 1582
 CHANNEL_NAMES = ["小指", "无名指", "中指", "食指", "拇指弯曲", "拇指对掌"]
+TOP_TOUCH_CHANNELS = [
+    ("拇指", 4498, True),
+    ("食指", 4128, False),
+    ("中指", 3758, False),
+    ("无名指", 3388, False),
+    ("小指", 3018, False),
+]
+TOP_TOUCH_COUNT = 96
+FORCE_K = 0.00292650244415058227
+FORCE_B = -0.6037947156125716
+THUMB_FORCE_K = 0.004420145759358057
+THUMB_FORCE_B = -1.0701492398616255
 
 
 def six_ints(text: str) -> list[int]:
@@ -37,6 +51,12 @@ def signed_words(registers: list[int]) -> list[int]:
     return list(struct.unpack(">" + "h" * len(registers), packed))
 
 
+def touch_raw_to_force_n(raw: int, is_thumb: bool) -> float:
+    force = ((THUMB_FORCE_K * raw + THUMB_FORCE_B) if is_thumb
+             else (FORCE_K * raw + FORCE_B))
+    return max(0.0, min(force, 10.0))
+
+
 class Bridge:
     def __init__(self, args: argparse.Namespace):
         self.args = args
@@ -45,6 +65,15 @@ class Bridge:
         self.server: Optional[socket.socket] = None
         self.last_written: Optional[list[int]] = None
         self.safe_sent = False
+        self.force_publisher = ForcePublisher(args.force_listen_host, args.force_listen_port)
+        self.force_seq = 0
+        self.next_force_read = 0.0
+        self.next_touch_read = 0.0
+        self.touch_raw_max = [0] * 5
+        self.touch_top5_mean = [0.0] * 5
+        self.touch_force_n = [0.0] * 5
+        self.touch_valid = False
+        self.touch_mono_ms = 0
 
     def read_angles(self) -> list[int]:
         response = self.client.read_holding_registers(
@@ -52,6 +81,67 @@ class Bridge:
         if response.isError() or not hasattr(response, "registers"):
             raise RuntimeError(f"读取 ANGLE_ACT 失败: {response}")
         return signed_words(list(response.registers))
+
+    def read_force(self) -> list[int]:
+        response = self.client.read_holding_registers(
+            address=FORCE_ACT_REGISTER, count=6, slave=self.args.device_id)
+        if response.isError() or not hasattr(response, "registers"):
+            raise RuntimeError(f"读取 FORCE_ACT 失败: {response}")
+        return signed_words(list(response.registers))
+
+    def read_top_touch(self) -> tuple[list[int], list[float], list[float]]:
+        maxima = []
+        top5_means = []
+        forces = []
+        for name, address, is_thumb in TOP_TOUCH_CHANNELS:
+            response = self.client.read_holding_registers(
+                address=address, count=TOP_TOUCH_COUNT, slave=self.args.device_id)
+            if response.isError() or not hasattr(response, "registers"):
+                raise RuntimeError(f"读取{name} top_touch失败: {response}")
+            values = signed_words(list(response.registers))
+            if len(values) != TOP_TOUCH_COUNT:
+                raise RuntimeError(f"读取{name} top_touch长度={len(values)}")
+            maximum = max(values)
+            maxima.append(maximum)
+            top5_means.append(sum(sorted(values, reverse=True)[:5]) / 5.0)
+            forces.append(touch_raw_to_force_n(maximum, is_thumb))
+        return maxima, top5_means, forces
+
+    def publish_force_if_due(self) -> None:
+        now = time.monotonic()
+        if now < self.next_force_read:
+            return
+        self.next_force_read = now + 1.0 / self.args.force_hz
+        self.force_seq += 1
+        if now >= self.next_touch_read:
+            self.next_touch_read = now + 1.0 / self.args.touch_hz
+            try:
+                (self.touch_raw_max, self.touch_top5_mean,
+                 self.touch_force_n) = self.read_top_touch()
+                self.touch_valid = True
+                self.touch_mono_ms = int(time.monotonic() * 1000)
+            except Exception as exc:
+                self.touch_valid = False
+                print(f"[top_touch读取失败] {exc}", file=sys.stderr)
+        packet = {
+            "type": "inspire_feedback",
+            "seq": self.force_seq,
+            "mono_ms": int(now * 1000),
+            "force_act": [0] * 6,
+            "top_touch_order": [item[0] for item in TOP_TOUCH_CHANNELS],
+            "top_touch_raw_max": self.touch_raw_max,
+            "top_touch_top5_mean": self.touch_top5_mean,
+            "top_touch_force_n": self.touch_force_n,
+            "touch_valid": self.touch_valid,
+            "touch_mono_ms": self.touch_mono_ms,
+            "valid": False,
+        }
+        try:
+            packet["force_act"] = self.read_force()
+            packet["valid"] = True
+        except Exception as exc:
+            packet["error"] = str(exc)
+        self.force_publisher.broadcast(packet)
 
     def write_angles(self, angles: list[int], *, safety_return: bool = False) -> None:
         if not self.args.enable_write:
@@ -98,12 +188,13 @@ class Bridge:
 
     def handle_connection(self, conn: socket.socket, address) -> None:
         print(f"JSON客户端已连接: {address}")
-        conn.settimeout(0.1)
+        conn.settimeout(min(0.05, 1.0 / self.args.force_hz))
         buffer = ""
         last_packet = time.monotonic()
         self.safe_sent = False
         try:
             while self.running:
+                self.publish_force_if_due()
                 try:
                     chunk = conn.recv(4096)
                     if not chunk:
@@ -145,9 +236,14 @@ class Bridge:
         print("========== 独立 Inspire 安全桥接 ==========")
         print(f"灵巧手: {self.args.hand_ip}:{self.args.hand_port}, Device ID={self.args.device_id}")
         print(f"JSON监听: {self.args.listen_host}:{self.args.listen_port}")
+        print(f"FORCE_ACT发布: {self.args.force_listen_host}:{self.args.force_listen_port}, "
+              f"{self.args.force_hz:.1f} Hz")
+        print(f"五指top_touch采集: {self.args.touch_hz:.1f} Hz, "
+              "顺序=[拇指,食指,中指,无名指,小指]")
         print(f"写入状态: {'已启用' if self.args.enable_write else '只读（不会运动）'}")
         if not self.client.connect():
             raise RuntimeError("Modbus TCP连接失败")
+        self.force_publisher.start()
         actual = self.read_angles()
         self.last_written = list(self.args.safe_open) if self.args.enable_write else None
         print(f"当前实际角度: {actual}")
@@ -161,9 +257,10 @@ class Bridge:
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind((self.args.listen_host, self.args.listen_port))
         self.server.listen(1)
-        self.server.settimeout(1.0)
+        self.server.settimeout(min(0.05, 1.0 / self.args.force_hz))
         print("桥接已启动，按 Ctrl+C 退出。")
         while self.running:
+            self.publish_force_if_due()
             try:
                 conn, address = self.server.accept()
                 self.handle_connection(conn, address)
@@ -175,7 +272,63 @@ class Bridge:
         self.return_safe("桥接退出")
         if self.server:
             self.server.close()
+        self.force_publisher.close()
         self.client.close()
+
+
+class ForcePublisher:
+    """将桥接器读到的 FORCE_ACT 和五指top_touch广播给本机客户端。"""
+
+    def __init__(self, host: str, port: int):
+        self.host = host
+        self.port = port
+        self.running = True
+        self.server: Optional[socket.socket] = None
+        self.clients: list[socket.socket] = []
+        self.lock = threading.Lock()
+
+    def start(self) -> None:
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server.bind((self.host, self.port))
+        self.server.listen(4)
+        self.server.settimeout(0.5)
+        threading.Thread(target=self._accept_loop, daemon=True).start()
+
+    def _accept_loop(self) -> None:
+        while self.running and self.server is not None:
+            try:
+                conn, address = self.server.accept()
+                conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                with self.lock:
+                    self.clients.append(conn)
+                print(f"Inspire反馈客户端已连接: {address}")
+            except socket.timeout:
+                continue
+            except OSError:
+                break
+
+    def broadcast(self, packet: dict) -> None:
+        data = (json.dumps(packet, ensure_ascii=False, separators=(",", ":")) + "\n").encode()
+        with self.lock:
+            dead = []
+            for conn in self.clients:
+                try:
+                    conn.sendall(data)
+                except OSError:
+                    dead.append(conn)
+            for conn in dead:
+                self.clients.remove(conn)
+                conn.close()
+
+    def close(self) -> None:
+        self.running = False
+        if self.server:
+            self.server.close()
+        with self.lock:
+            for conn in self.clients:
+                conn.close()
+            self.clients.clear()
 
 
 def main() -> int:
@@ -185,6 +338,11 @@ def main() -> int:
     parser.add_argument("--device-id", type=int, default=1)
     parser.add_argument("--listen-host", default="127.0.0.1")
     parser.add_argument("--listen-port", type=int, default=9102)
+    parser.add_argument("--force-listen-host", default="127.0.0.1")
+    parser.add_argument("--force-listen-port", type=int, default=9202)
+    parser.add_argument("--force-hz", type=float, default=20.0)
+    parser.add_argument("--touch-hz", type=float, default=5.0,
+                        help="五指top_touch阵列读取频率，1..10Hz")
     parser.add_argument("--enable-write", action="store_true", help="明确允许写角度寄存器")
     parser.add_argument("--safe-open", type=six_ints,
                         help="客户端断开/超时时写入的6路安全值")
@@ -201,6 +359,10 @@ def main() -> int:
         parser.error("只读模式不需要 --safe-open")
     if args.max_step < 1 or args.max_step > 50:
         parser.error("--max-step 必须在1~50之间")
+    if args.force_hz < 1 or args.force_hz > 50:
+        parser.error("--force-hz 必须在1~50之间")
+    if args.touch_hz < 1 or args.touch_hz > 10:
+        parser.error("--touch-hz 必须在1~10之间")
     bridge = Bridge(args)
 
     def stop_handler(_signum, _frame):

@@ -80,7 +80,7 @@ BROKER_HOST   = "127.0.0.1"   # BLE Broker 监听地址（本机）
 SENSOR_INDEX_R     = [1, 2, 3, 5, 9, 8]  # 右手弯曲通道映射 → [小指,无名,中指,食指,拇弯,拇旋]
 SENSOR_INDEX_L     = [9, 8, 5, 3, 1, 2]  # 左手弯曲通道映射 → [小指,无名,中指,食指,拇弯,拇旋]
 SENSOR_INDEX_MAP   = {"r": SENSOR_INDEX_R, "l": SENSOR_INDEX_L}
-EXO_FORCE_BASELINE = 4.903                 # 外骨骼BLE触觉零偏(N)，减去后才是真实力
+EXO_FORCE_BASELINE = 4.903                 # STM32最低有效输出阈值(N)；≤阈值视为0，>阈值保留绝对力原值
 
 # ===== 灵巧手角度范围 =====
 HAND_ANGLE_MIN     = 150    # 伸直（小值=伸直，参考 hand_control.py pos=0=伸直）
@@ -577,7 +577,7 @@ class FingerStateMachine:
                     print(f"[{srv.name}] GLOVE → FORCE_ENTRY  手触觉={feedback:.2f}N")
 
             # ---- FORCE_ENTRY ----
-             elif mode == FingerMode.FORCE_ENTRY:
+            elif mode == FingerMode.FORCE_ENTRY:
                 drive_mA = min(feedback * HAND_TO_SERVO_GAIN, float(CURRENT_LIMIT_MA))
                 srv._pending_mA = drive_mA
                 for ji in joint_ids:

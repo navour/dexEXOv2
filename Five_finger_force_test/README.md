@@ -119,7 +119,7 @@ PID_KD = 5.0            # 微分系数
 PID_DEADZONE = 0.15     # 死区 (N)
 PID_OUTPUT_MAX = 400.0  # 电流上限 (mA)
 PID_OUTPUT_MIN = -200.0 # 电流下限 (mA)
-BLE_FORCE_BASELINE = 4.903  # 传感器零点阈值 (N)
+BLE_FORCE_BASELINE = 4.903  # STM32最低有效输出阈值 (N)；≤阈值为0，>阈值保留原值
 ```
 
 ## 网络配置

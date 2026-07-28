@@ -951,7 +951,7 @@ def loop() -> None:
 				# 限制dt范围，防止异常
 				dt = max(0.001, min(0.1, dt))
 
-				# 获取反馈力 (BLE 已解算成 N)，减去零点偏移
+				# 获取反馈力 (BLE 已解算成 N)；≤4.903N视为0，超过后保留原值
 				raw_feedbackN = touch_values[0] if touch_values else 0.0
 				
 				# 如果 BLE 数据过期（超过2秒没收到），启动释放

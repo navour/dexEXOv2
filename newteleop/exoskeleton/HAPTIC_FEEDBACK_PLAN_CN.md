@@ -20,7 +20,7 @@ Inspire左手 ──网线──► 树莓派 eth0 (192.168.123.100/24)
 当前可以实现“有界力提示”：
 
 ```text
-Inspire FORCE_ACT接触信号
+Inspire五指 top_touch 阵列接触力
   → 基线扣除/滤波/归一化
   → XL330模式5（有位置终点的限流收绳）
   → 操作者感到手指继续弯曲受阻
@@ -83,13 +83,13 @@ mHandPro 提供姿态/骨骼旋转，不提供指尖力。XL330 的实际电流�
 mhandpro_diagnostic
   └──六维角度JSON──TCP 127.0.0.1:9102──► standalone_inspire_bridge
                                                         ├──Modbus写ANGLE_SET──► Inspire
-                                                        └──Modbus读FORCE_ACT
+                                                        └──Modbus读五组top_touch
                                                                    │
                                                                    ▼
                                                  本机力数据流 127.0.0.1:9202
                                                                    │
                                                                    ▼
-                                                   left_haptic_controller
+                                                   force_control/left_index_force_test
                                                                    │
                                                           /dev/serial0
                                                                    ▼
@@ -99,23 +99,23 @@ mhandpro_diagnostic
 设计约束：
 
 - `standalone_inspire_bridge` 是 Modbus TCP 的唯一拥有者，同时写角度并读力。
-- `left_haptic_controller` 是 Dynamixel 串口的唯一拥有者。
+- `force_control/left_index_force_test.py` 是 Dynamixel 串口的唯一拥有者。
 - 力数据必须含时间戳和序号，不允许用旧数据持续施力。
 - 运行力反馈时不能同时运行点动、电流脉冲或其他 Dynamixel 工具。
 
 ### 3.2 映射
 
 ```text
-Inspire FORCE_ACT: [小指, 无名指, 中指, 食指, 拇指弯曲, 拇指对掌]
+Inspire top_touch摘要: [拇指, 食指, 中指, 无名指, 小指]
 
-小指       channel 0 → 左手ID 10
-无名指   channel 1 → 左手ID 9
+拇指       channel 0 → 左手ID 6
+食指       channel 1 → 左手ID 7
 中指       channel 2 → 左手ID 8
-食指       channel 3 → 左手ID 7
-拇指       max(channel 4, channel 5) → 左手ID 6
+无名指   channel 3 → 左手ID 9
+小指       channel 4 → 左手ID 10
 ```
 
-拇指合并先用两路基线扣除后的较大值；后续可根据接触实验改为加权合并。
+每指对应一组12x8 top_touch阵列，首版复用旧代码取各阵列最大值。
 
 ---
 
@@ -163,7 +163,7 @@ s_filtered = s_filtered + alpha * (s - s_filtered)
 ```text
 FREE
   扭矩关闭，位置在neutral附近
-    │ FORCE_ACT连续多帧高于contact_on
+    │ top_touch换算力连续多帧高于contact_on
     ▼
 CONTACT_ENTRY
   模式5，先写当前位置，电流从0缓慢爬升
@@ -171,7 +171,7 @@ CONTACT_ENTRY
 HOLD
   目标位置不超过neutral + max_travel
   电流限制随s_filtered缓慢变化
-    │ FORCE_ACT持续低于contact_off
+    │ top_touch换算力持续低于contact_off
     ▼
 RELEASE
   低电流返回neutral
@@ -233,7 +233,7 @@ Inspire指端力 → 舒适缩放/限幅 → 操作者目标力 F_target
 
 ### 阶段 B：桥接力数据输出
 
-1. 扩展 `standalone_inspire_bridge.py`，以 20～30 Hz 读取 `FORCE_ACT` 地址 1582。
+1. 扩展 `standalone_inspire_bridge.py`，以5 Hz读取五组 `top_touch` 阵列并发布摘要。
 2. 在树莓派本机发布含序号、时间戳和六路 raw 的 JSON。
 3. 力读取失败不影响桥接执行安全张手，但必须通知力控程序进入 FAULT。
 
@@ -253,7 +253,7 @@ Inspire指端力 → 舒适缩放/限幅 → 操作者目标力 F_target
 
 1. 重新采集当次佩戴的 neutral。
 2. 只打开 ID 7，其他舵机保持扭矩关闭。
-3. 先用人工强度，再接 Inspire 食指 FORCE_ACT。
+3. 先用人工强度，再接 Inspire 食指 `fingerfour_top_touch`。
 4. 每次只提高一档电流或行程，不同时改两个参数。
 5. 反复验证 STOP、拔网线、停止手套数据和松开物体。
 
@@ -276,7 +276,7 @@ Inspire指端力 → 舒适缩放/限幅 → 操作者目标力 F_target
 
 ## 7. 必须实现的安全看门狗
 
-- Inspire FORCE_ACT 超时：进入 RELEASE/FAULT。
+- Inspire top_touch 超时：进入 RELEASE/FAULT。
 - mHandPro 姿态帧超时：进入 RELEASE/FAULT。
 - Dynamixel 通信失败：目标电流清零，尝试关扭矩。
 - 位置超过 `neutral + max_travel + tolerance`：立即 FAULT。
@@ -300,7 +300,7 @@ Inspire指端力 → 舒适缩放/限幅 → 操作者目标力 F_target
 
 待验证：
 
-- Inspire FORCE_ACT 六通道的空载噪声、接触方向和有效范围。
+- Inspire 五组top_touch阵列的空载噪声、接触位置和有效范围。
 - 左手 ID 6、8、9、10 的收放方向。
 - 模式5下安全的最小可感电流和行程。
 - 力数据断线后的自动释放。

@@ -121,7 +121,7 @@ DDS触觉数据 → dds_to_force.py → TCP → finger_force.py → PID闭环 �
 
 | 参数 | 当前值 | 含义 |
 |---|---|---|
-| `BLE_FORCE_BASELINE` | 4.903 | 传感器零点（N），低于此值视为0力 |
+| `BLE_FORCE_BASELINE` | 4.903 | STM32最低有效输出阈值（N），≤此值视为0，超过后保留原值 |
 | `BLE_KEEPALIVE_INTERVAL` | 3.0s | 心跳包发送间隔 |
 | `BLE_DATA_TIMEOUT` | 15.0s | 数据超时阈值，超时后断开重连 |
 | `BLE_RECONNECT_DELAY` | 1.0s | 重连等待时间 |
@@ -129,7 +129,7 @@ DDS触觉数据 → dds_to_force.py → TCP → finger_force.py → PID闭环 �
 | 现象 | 调整方法 |
 |---|---|
 | 🔴 手套没碰东西但舵机有微小输出 | 传感器零漂，**增大 BLE_FORCE_BASELINE**（如4.903→4.95） |
-| 🔴 轻触时没反应（力太小检测不到） | **减小 BLE_FORCE_BASELINE**（如4.903→4.85） |
+| 🔴 轻触时没反应（力太小检测不到） | STM32当前低端固定输出约4.903N，树莓派不能恢复0～4.9N信息 |
 | 🔴 BLE频繁断连重连 | **增大 BLE_DATA_TIMEOUT**（如15→30） |
 
 ---

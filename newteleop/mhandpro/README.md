@@ -10,7 +10,7 @@
 [小指, 无名指, 中指, 食指, 拇指弯曲, 拇指对掌]
 ```
 
-`standalone_inspire_bridge.py` 连接 `192.168.123.210:6000`，接收本机 `127.0.0.1:9102` 的六通道命令，执行行程限制后写入 Inspire。
+`standalone_inspire_bridge.py` 连接 `192.168.123.210:6000`，接收本机 `127.0.0.1:9102` 的六通道命令，执行行程限制后写入 Inspire。同一进程以默认 20 Hz 读取 `FORCE_ACT`，以5 Hz读取拇、食、中、无名、小指的五组 `top_touch` 阵列，并将换行 JSON 只读广播到 `127.0.0.1:9202`，供外骨骼力反馈使用。
 
 ## 编译
 
@@ -72,3 +72,19 @@ mHandPro：/dev/ttyUSB0
 ## tools
 
 `tools/` 中是 Inspire 的低风险硬件检查程序，不是日常遥操必启进程。
+
+不带数据手套时，可直接只读监视 Inspire 左食指 `fingerfour_top_touch`：
+
+```bash
+cd ~/cnn/newteleop
+./.venv/bin/python mhandpro/tools/inspire_index_top_touch_monitor.py
+```
+
+该工具读取地址4128的96个16位寄存器，按官方SDK重排为12x8阵列；不写入
+角度、力、速度或标定寄存器。右手轻压Inspire食指指尖时，重点观察
+`max_raw`、`top5_mean`和最大值坐标是否变化。显示完整阵列：
+
+```bash
+./.venv/bin/python mhandpro/tools/inspire_index_top_touch_monitor.py \
+  --matrix --seconds 20
+```

@@ -247,7 +247,7 @@ PID_OUTPUT_MAX = 400.0  # 输出电流上限 (mA)
 ### BLE 参数（可调）
 
 ```python
-BLE_FORCE_BASELINE = 4.903  # 触觉传感器零点阈值
+BLE_FORCE_BASELINE = 4.903  # STM32最低有效输出阈值；≤阈值为0，>阈值保留原值
 BLE_KEEPALIVE_INTERVAL = 3.0   # 心跳间隔 (秒)
 BLE_DATA_TIMEOUT = 15.0        # 数据超时 (秒)
 ```

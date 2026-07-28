@@ -47,8 +47,9 @@ BLE_KEEPALIVE_DATA = b"PING"
 BLE_DATA_TIMEOUT = 15.0
 BLE_RECONNECT_DELAY = 1.0
 
-# ===== BLE 力零偏校准 =====
-# 固件在"未施力"时发送约 4.903N，减去此基线后才是真实力值
+# ===== 历史 BLE 相对增量处理 =====
+# 注意：4.903N是STM32查表的最低有效输出，不是普通零偏。
+# 本旧程序的减法只产生相对最低输出的增量，不是绝对力。
 BLE_FORCE_BASELINE = 4.903
 
 # ===== 力→电流转换 =====
@@ -134,7 +135,7 @@ class ServoController:
 
         # 状态
         self.state        = FingerState.IDLE
-        self.target_force = 0.0          # 当前目标力(N)，已去除基线
+        self.target_force = 0.0          # 当前目标增量(N)，已减去最低输出
 
         # 位置记录
         self.init_pos     = None         # 初始化时记录的位置
@@ -160,7 +161,7 @@ class ServoController:
 # =====================================================================
 
 class BLEDataStore:
-    """线程安全的 BLE 目标力存储：[拇指, 食指, 中指, 无名指, 小指] (N, 已去基线)"""
+    """线程安全的 BLE 目标增量存储：[拇指, 食指, 中指, 无名指, 小指] (N，非绝对力)"""
 
     def __init__(self):
         self._lock = threading.Lock()
@@ -168,7 +169,7 @@ class BLEDataStore:
         self._last_update = 0.0
 
     def update_raw(self, raw_values: List[float]) -> None:
-        """传入原始力值列表，自动减去基线并截断到0"""
+        """传入原始力值列表，转为相对最低输出的增量并截断到0（非绝对力）。"""
         calibrated = []
         for v in raw_values[:NUM_FINGERS]:
             c = v - BLE_FORCE_BASELINE
