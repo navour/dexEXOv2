@@ -19,7 +19,8 @@ OLD_BAUDRATE = 57600
 NEW_BAUDRATE = 1000000
 NEW_BAUD_INDEX = 3  # 1Mbps
 PROTOCOL_VERSION = 2.0
-DXL_IDS = [1, 2, 3, 4, 5]
+DXL_IDS = [1, 2, 3, 4, 5]          # 右手（已完成，保留备用）
+DXL_IDS_LEFT = [6, 7, 8, 9, 10]    # 左手（ID 已改，波特率待改）
 
 ADDR_TORQUE_ENABLE = 64
 ADDR_BAUD_RATE = 8
@@ -35,7 +36,10 @@ if not portHandler.openPort():
 portHandler.setBaudRate(OLD_BAUDRATE)
 print(f"当前波特率: {OLD_BAUDRATE}")
 
-for sid in DXL_IDS:
+# 左手舵机 ID 已改为 6~10，但波特率仍是出厂 57600，需要统一修改
+TARGET_IDS = DXL_IDS_LEFT
+
+for sid in TARGET_IDS:
     model, res, err = packetHandler.ping(portHandler, sid)
     if res != 0:
         print(f"  舵机{sid}: Ping失败 (可能已经是新波特率)")
@@ -58,7 +62,7 @@ time.sleep(0.5)
 # 用新波特率验证
 portHandler.setBaudRate(NEW_BAUDRATE)
 print(f"\n切换到新波特率 {NEW_BAUDRATE} 验证:")
-for sid in DXL_IDS:
+for sid in TARGET_IDS:
     model, res, err = packetHandler.ping(portHandler, sid)
     if res == 0:
         print(f"  舵机{sid}: ✓ 验证成功 (Model={model})")

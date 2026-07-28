@@ -1,0 +1,13 @@
+{
+  "hand": "left",
+  "device": "/dev/serial0",
+  "baudrate": 1000000,
+  "protocol": 2.0,
+  "servos": {
+    "6": {"finger": "thumb", "position_direction_verified": false, "current_direction_verified": false},
+    "7": {"finger": "index", "position_direction_verified": false, "current_direction_verified": false},
+    "8": {"finger": "middle", "position_direction_verified": false, "current_direction_verified": false},
+    "9": {"finger": "ring", "position_direction_verified": false, "current_direction_verified": false},
+    "10": {"finger": "pinky", "position_direction_verified": false, "current_direction_verified": false}
+  }
+}

@@ -1,1 +1,50 @@
 ftp/inspire_hand_ws.tar.gz
+
+# 编译生成目录
+build/
+
+# 编译中间文件
+*.o
+*.d
+
+# Python缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# 本地压缩备份
+*.zip
+
+# 临时文件
+*.log
+*.tmp
+
+# 编译生成目录
+build/
+
+# 编译中间文件
+*.o
+*.d
+
+# Python缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# 本地压缩备份
+*.zip
+
+# 临时文件
+*.log
+*.tmp
+
+# Python虚拟环境
+.venv/
+venv/
+env/
+
+# 打包的本地运行环境
+ftp/inspire_hand_ws/venv_x86.tar.xz
+
+# 第三方 mHandPro SDK，确认再分发许可后再决定是否上传
+mHandPro_LinuxSDK/

@@ -1,0 +1,53 @@
+{
+  "device": "/dev/serial0",
+  "baudrate": 1000000,
+  "captured_unix_time": 1784776285.1948006,
+  "capture_seconds": 2.0,
+  "servos": {
+    "6": {
+      "finger": "thumb",
+      "mode": 0,
+      "neutral_position": 3396,
+      "minimum_sample": 3396,
+      "maximum_sample": 3396,
+      "span": 0,
+      "stddev": 0.0
+    },
+    "7": {
+      "finger": "index",
+      "mode": 5,
+      "neutral_position": 6787,
+      "minimum_sample": 6786,
+      "maximum_sample": 6787,
+      "span": 1,
+      "stddev": 0.314
+    },
+    "8": {
+      "finger": "middle",
+      "mode": 0,
+      "neutral_position": 3569,
+      "minimum_sample": 3569,
+      "maximum_sample": 3569,
+      "span": 0,
+      "stddev": 0.0
+    },
+    "9": {
+      "finger": "ring",
+      "mode": 0,
+      "neutral_position": 2893,
+      "minimum_sample": 2892,
+      "maximum_sample": 2893,
+      "span": 1,
+      "stddev": 0.378
+    },
+    "10": {
+      "finger": "pinky",
+      "mode": 0,
+      "neutral_position": 5243,
+      "minimum_sample": 5242,
+      "maximum_sample": 5243,
+      "span": 1,
+      "stddev": 0.155
+    }
+  }
+}

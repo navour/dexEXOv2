@@ -35,6 +35,13 @@ DEVICE_ADDRESSES = [
 TX_CHAR_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
 RX_CHAR_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
 
+# ===== BLE Broker 配置 =====
+# USE_BROKER=True: 连接本地 ble_broker.py 中转（推荐，可与 ble_hand_control.py 共用同一蓝牙）
+# USE_BROKER=False: 直接连接 BLE 设备（仅单独运行时使用）
+USE_BROKER = True
+BROKER_HOST = "127.0.0.1"
+BROKER_PORT = 9001
+
 # ===== BLE 保活配置 =====
 BLE_KEEPALIVE_INTERVAL = 3.0
 BLE_KEEPALIVE_DATA = b"PING"
@@ -46,6 +53,9 @@ BLE_DEBUG = False
 BLE_DEBUG_INTERVAL = 1.0
 PID_DEBUG = False         # PID 力控调试打印（五指模式建议关闭，减少串口占用）
 PID_DEBUG_INTERVAL = 1.0  # PID 调试打印间隔(秒)
+
+# ===== 目标力缩放 =====
+FORCE_SCALE = 1.0  # 目标力比例映射，默认1:1。如设0.5则目标力减半，设2.0则翻倍
 
 # ===== PID 力闭环参数 =====
 PID_KP = 50.0           # 比例系数 (mA/N)
@@ -196,9 +206,15 @@ class JsonStreamParser:
 
 
 def extract_touch_sensors(text: str) -> List[float]:
-	"""从原始文本中兜底提取 touch_sensors 数值或裸数组"""
+	"""从原始文本中兜底提取 touch_sensors 数值或裸数组
+	支持格式：
+	  1. {"touch_sensors": [4.9, 4.9, ...]}
+	  2. {0,3399,4089,...,4.90,4.90,4.90,4.90,4.90}  → 取最后5位
+	  3. [4.9, 4.9, 4.9, 4.9, 4.9]                   → 取最后5位
+	"""
 	results: List[float] = []
-	# 先尝试 {"touch_sensors": [...]} 格式
+
+	# 格式1: {"touch_sensors": [...]} 标准JSON
 	pattern = re.compile(r'"touch_sensors"\s*:\s*\[([^\]]+)\]')
 	for match in pattern.findall(text):
 		parts = [p.strip() for p in match.split(",") if p.strip()]
@@ -206,19 +222,33 @@ def extract_touch_sensors(text: str) -> List[float]:
 			values = [float(p) for p in parts]
 		except ValueError:
 			continue
-		if values:
-			results = values
-	# 再尝试裸数组 [4.9,4.9,...] 格式
+		if len(values) >= 2:
+			results = values[-5:] if len(values) >= 5 else values
+
+	# 格式2: {val1,val2,...,val18} 花括号混合数据，取最后5位
 	if not results:
-		pattern2 = re.compile(r'\[([0-9.,\s]+)\]')
+		pattern2 = re.compile(r'\{([0-9.,\s]+)\}')
 		for match in pattern2.findall(text):
 			parts = [p.strip() for p in match.split(",") if p.strip()]
 			try:
 				values = [float(p) for p in parts]
 			except ValueError:
 				continue
-			if len(values) >= 2:  # 至少2个值才认为是传感器数组
-				results = values
+			if len(values) >= 5:
+				results = values[-5:]  # 取最后5位
+
+	# 格式3: 裸方括号数组 [4.9,4.9,...]，取最后5位
+	if not results:
+		pattern3 = re.compile(r'\[([0-9.,\s]+)\]')
+		for match in pattern3.findall(text):
+			parts = [p.strip() for p in match.split(",") if p.strip()]
+			try:
+				values = [float(p) for p in parts]
+			except ValueError:
+				continue
+			if len(values) >= 2:
+				results = values[-5:] if len(values) >= 5 else values
+
 	return results
 
 
@@ -405,10 +435,10 @@ def parse_command(buf: str) -> None:
 								controller.releasing = False
 								controller.state = "IDLE"
 								print(f"[舵机{controller.servo_id}/{controller.finger_name}] 取消释放，切换到力控")
-							controller.targetForceN = abs(force_val)
+							controller.targetForceN = abs(force_val) * FORCE_SCALE
 							controller.touchMode = True
 							controller.command_updated = True
-							print(f"[舵机{controller.servo_id}/{controller.finger_name}] 目标力={controller.targetForceN:.2f}N")
+							print(f"[舵机{controller.servo_id}/{controller.finger_name}] 目标力={controller.targetForceN:.2f}N (原始={abs(force_val):.2f}×{FORCE_SCALE})")
 					else:
 						print(f"[错误] 舵机索引超出范围: {servo_idx+1}")
 				except ValueError:
@@ -442,10 +472,10 @@ def parse_command(buf: str) -> None:
 							exitFreeMode(controller)
 						if controller.releasing:
 							controller.releasing = False
-						controller.targetForceN = abs(force_val)
+						controller.targetForceN = abs(force_val) * FORCE_SCALE
 						controller.touchMode = True
 						controller.command_updated = True
-				print(f"[全部] 目标力={force_val}N")
+				print(f"[全部] 目标力={abs(force_val) * FORCE_SCALE:.2f}N (原始={abs(force_val):.2f}×{FORCE_SCALE})")
 			except ValueError:
 				print("[错误] 无效的数值格式")
 
@@ -735,11 +765,58 @@ async def ble_main() -> None:
 			break
 
 
+def ble_broker_client() -> None:
+	"""连接本地 BLE Broker，接收广播数据，替代直连 BLE"""
+	parser = JsonStreamParser()
+	buf = ""
+	while running:
+		try:
+			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			sock.connect((BROKER_HOST, BROKER_PORT))
+			sock.settimeout(5.0)
+			print(f"[BLE] 已连接 Broker {BROKER_HOST}:{BROKER_PORT}")
+			while running:
+				try:
+					chunk = sock.recv(1024)
+					if not chunk:
+						print("[BLE] Broker 连接关闭")
+						break
+					text = chunk.decode("utf-8", errors="ignore")
+					buf += text
+					# 与直连模式完全相同的解析逻辑
+					payloads = parser.feed(text)
+					for payload in payloads:
+						touch_store.update_from_json(payload)
+					values = extract_touch_sensors(buf)
+					if values:
+						touch_store.update_from_json({"touch_sensors": values})
+						buf = ""
+					if len(buf) > 512:
+						buf = buf[-512:]
+				except socket.timeout:
+					continue
+				except Exception as e:
+					print(f"[BLE] 接收错误: {e}")
+					break
+		except Exception as e:
+			if running:
+				print(f"[BLE] 连接 Broker 失败: {e}，3s 后重试...")
+				time.sleep(3)
+		finally:
+			try:
+				sock.close()
+			except Exception:
+				pass
+
+
 def ble_thread() -> None:
-	try:
-		asyncio.run(ble_main())
-	except Exception as e:
-		print(f"[BLE] 线程退出: {e}")
+	if USE_BROKER:
+		ble_broker_client()
+	else:
+		try:
+			asyncio.run(ble_main())
+		except Exception as e:
+			print(f"[BLE] 线程退出: {e}")
 
 
 # ===== 硬件初始化 =====
