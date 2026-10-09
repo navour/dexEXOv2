@@ -34,6 +34,203 @@ FORCE_K = 0.00292650244415058227
 FORCE_B = -0.6037947156125716
 THUMB_FORCE_K = 0.004420145759358057
 THUMB_FORCE_B = -1.0701492398616255
+INDEX_ANGLE_SLOT = 3
+FINGER_ANGLE_SLOTS = [4, 3, 2, 1, 0]  # [拇,食,中,无,小] -> Inspire六维槽
+
+
+class HapticOverride:
+    """兼容单食指覆盖，并支持五指独立LOCKED与力差PID。"""
+
+    def __init__(self, host: str, port: int, timeout: float,
+                 lock_retreat: int, max_step: int):
+        self.host = host
+        self.port = port
+        self.timeout = timeout
+        self.lock_retreat = lock_retreat
+        self.max_step = max_step
+        self.running = True
+        self.server: Optional[socket.socket] = None
+        self.lock = threading.Lock()
+        self.state = "GLOVE"
+        self.updated = 0.0
+        self.frozen_angles: Optional[list[int]] = None
+        self.locked_index: Optional[float] = None
+        self.pending_step = 0.0
+        self.finger_states: Optional[list[str]] = None
+        self.finger_pending_steps = [0.0] * 5
+        self.finger_locked_angles: list[Optional[float]] = [None] * 5
+
+    def start(self) -> None:
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server.bind((self.host, self.port))
+        self.server.listen(1)
+        self.server.settimeout(0.5)
+        threading.Thread(target=self._accept_loop, daemon=True).start()
+
+    def status_text(self) -> str:
+        with self.lock:
+            age = time.monotonic() - self.updated if self.updated else float("inf")
+            return (f"state={self.state}, frozen_angles={self.frozen_angles}, "
+                    f"locked_index={self.locked_index}, age={age:.3f}s")
+
+    def _accept_loop(self) -> None:
+        while self.running and self.server is not None:
+            try:
+                conn, address = self.server.accept()
+                print(f"力反馈覆盖客户端已连接: {address}")
+                threading.Thread(target=self._client_loop, args=(conn,), daemon=True).start()
+            except socket.timeout:
+                continue
+            except OSError:
+                break
+
+    def _client_loop(self, conn: socket.socket) -> None:
+        buffer = ""
+        conn.settimeout(1.0)
+        try:
+            while self.running:
+                chunk = conn.recv(4096)
+                if not chunk:
+                    break
+                buffer += chunk.decode("utf-8", errors="strict")
+                while "\n" in buffer:
+                    line, buffer = buffer.split("\n", 1)
+                    if not line.strip():
+                        continue
+                    packet = json.loads(line)
+                    if packet.get("type") != "haptic_override":
+                        continue
+                    state = str(packet.get("state", "GLOVE")).upper()
+                    if state not in ("GLOVE", "FORCE_ENTRY", "LOCKED", "RELEASE", "STOP"):
+                        raise ValueError(f"未知力反馈状态: {state}")
+                    with self.lock:
+                        finger_states = packet.get("finger_states")
+                        if finger_states is not None:
+                            if (not isinstance(finger_states, list)
+                                    or len(finger_states) != 5):
+                                raise ValueError("finger_states必须是5个状态")
+                            normalized = [str(item).upper() for item in finger_states]
+                            allowed = {"GLOVE", "FREE", "FORCE_ENTRY", "LOCKED",
+                                       "RELEASE", "RETURN_SETTLE", "STOP", "FAULT"}
+                            if any(item not in allowed for item in normalized):
+                                raise ValueError(f"未知每指力反馈状态: {normalized}")
+                            previous = self.finger_states or ["GLOVE"] * 5
+                            for fi, item in enumerate(normalized):
+                                if item == "LOCKED" and previous[fi] != "LOCKED":
+                                    self.finger_locked_angles[fi] = None
+                                if item in ("GLOVE", "FREE", "STOP", "FAULT"):
+                                    self.finger_locked_angles[fi] = None
+                            steps = packet.get("finger_steps", [0.0] * 5)
+                            if not isinstance(steps, list) or len(steps) != 5:
+                                raise ValueError("finger_steps必须是5个数")
+                            self.finger_states = normalized
+                            for fi, value in enumerate(steps):
+                                self.finger_pending_steps[fi] += float(value)
+                        if state == "FORCE_ENTRY" and self.state != "FORCE_ENTRY":
+                            self.frozen_angles = None
+                            self.locked_index = None
+                        if state == "LOCKED" and self.state != "LOCKED":
+                            base = (None if self.frozen_angles is None
+                                    else self.frozen_angles[INDEX_ANGLE_SLOT])
+                            self.locked_index = None if base is None else float(
+                                min(1000, base + self.lock_retreat))
+                        if state in ("GLOVE", "STOP"):
+                            self.frozen_angles = None
+                            self.locked_index = None
+                        self.state = state
+                        self.pending_step += float(packet.get("index_step", 0.0))
+                        self.updated = time.monotonic()
+        except Exception as exc:
+            print(f"[力反馈覆盖错误] {exc}", file=sys.stderr)
+        finally:
+            conn.close()
+            with self.lock:
+                self.state = "GLOVE"
+                self.frozen_angles = None
+                self.locked_index = None
+                self.pending_step = 0.0
+                self.finger_states = None
+                self.finger_pending_steps = [0.0] * 5
+                self.finger_locked_angles = [None] * 5
+            print("力反馈覆盖客户端已断开，恢复mHandPro。")
+
+    def apply(self, glove_angles: list[int], last_written: Optional[list[int]]) -> list[int]:
+        result = list(glove_angles)
+        with self.lock:
+            if time.monotonic() - self.updated > self.timeout:
+                self.state = "GLOVE"
+                self.frozen_angles = None
+                self.locked_index = None
+                self.pending_step = 0.0
+                self.finger_states = None
+                self.finger_pending_steps = [0.0] * 5
+                self.finger_locked_angles = [None] * 5
+            if self.finger_states is not None:
+                # 五指源程序式独立状态：未LOCKED手指继续跟手套，
+                # LOCKED手指保持各自角度并叠加各自力差PID。
+                for fi, state in enumerate(self.finger_states):
+                    slot = FINGER_ANGLE_SLOTS[fi]
+                    if state == "LOCKED":
+                        if self.finger_locked_angles[fi] is None:
+                            base = (last_written or glove_angles)[slot]
+                            self.finger_locked_angles[fi] = float(
+                                min(1000, base + self.lock_retreat))
+                        value = self.finger_locked_angles[fi] - self.finger_pending_steps[fi]
+                        self.finger_pending_steps[fi] = 0.0
+                        self.finger_locked_angles[fi] = max(0.0, min(1000.0, value))
+                        result[slot] = round(self.finger_locked_angles[fi])
+                    elif state in ("RELEASE", "RETURN_SETTLE") and last_written is not None:
+                        old = last_written[slot]
+                        result[slot] = max(old - self.max_step,
+                                           min(old + self.max_step, glove_angles[slot]))
+                    else:
+                        self.finger_locked_angles[fi] = None
+                        self.finger_pending_steps[fi] = 0.0
+                if last_written is not None:
+                    result = [max(old - self.max_step, min(old + self.max_step, target))
+                              for old, target in zip(last_written, result)]
+                return result
+            if self.state == "FORCE_ENTRY":
+                # 寻触期间继续跟随mHandPro，让操作者能完成整手包络。
+                # 只有位置稳定进入LOCKED后才冻结六通道抓取姿态。
+                self.frozen_angles = None
+                self.locked_index = None
+            elif self.state == "LOCKED":
+                if self.frozen_angles is None:
+                    self.frozen_angles = list(last_written or glove_angles)
+                result = list(self.frozen_angles)
+                if self.locked_index is None:
+                    base = self.frozen_angles[INDEX_ANGLE_SLOT]
+                    self.locked_index = float(min(1000, base + self.lock_retreat))
+                self.locked_index = max(0.0, min(1000.0,
+                    self.locked_index - self.pending_step))
+                self.pending_step = 0.0
+                desired = round(self.locked_index)
+                if last_written is not None:
+                    previous = last_written[INDEX_ANGLE_SLOT]
+                    desired = max(previous - self.max_step,
+                                  min(previous + self.max_step, desired))
+                result[INDEX_ANGLE_SLOT] = desired
+                self.frozen_angles[INDEX_ANGLE_SLOT] = desired
+            elif self.state == "RELEASE":
+                # 释放覆盖时整手平滑追回手套，不因姿态差过大触发桥接跳变保护。
+                if self.frozen_angles is None:
+                    self.frozen_angles = list(last_written or glove_angles)
+                result = [max(old - self.max_step, min(old + self.max_step, target))
+                          for old, target in zip(self.frozen_angles, glove_angles)]
+                self.frozen_angles = list(result)
+
+            # 对超时恢复和STOP/GLOVE切换也做最后一层六通道步长限制。
+            if last_written is not None:
+                result = [max(old - self.max_step, min(old + self.max_step, target))
+                          for old, target in zip(last_written, result)]
+        return result
+
+    def close(self) -> None:
+        self.running = False
+        if self.server:
+            self.server.close()
 
 
 def six_ints(text: str) -> list[int]:
@@ -74,6 +271,9 @@ class Bridge:
         self.touch_force_n = [0.0] * 5
         self.touch_valid = False
         self.touch_mono_ms = 0
+        self.haptic = HapticOverride(
+            args.haptic_listen_host, args.haptic_listen_port,
+            args.haptic_timeout, args.lock_angle_retreat, args.max_step)
 
     def read_angles(self) -> list[int]:
         response = self.client.read_holding_registers(
@@ -224,6 +424,7 @@ class Bridge:
                     if int(packet.get("mode", 0)) & 0b0001 == 0:
                         raise ValueError("初期桥接只接受角度模式")
                     angles = [int(value) for value in packet.get("angle_set", [])]
+                    angles = self.haptic.apply(angles, self.last_written)
                     self.write_angles(angles)
         except Exception as exc:
             print(f"[客户端处理错误] {exc}", file=sys.stderr)
@@ -244,6 +445,9 @@ class Bridge:
         if not self.client.connect():
             raise RuntimeError("Modbus TCP连接失败")
         self.force_publisher.start()
+        self.haptic.start()
+        print(f"力反馈覆盖: {self.args.haptic_listen_host}:{self.args.haptic_listen_port} "
+              f"(受力后保持整手，食指PID，超时{self.args.haptic_timeout:.1f}s恢复mHandPro)")
         actual = self.read_angles()
         self.last_written = list(self.args.safe_open) if self.args.enable_write else None
         print(f"当前实际角度: {actual}")
@@ -273,6 +477,7 @@ class Bridge:
         if self.server:
             self.server.close()
         self.force_publisher.close()
+        self.haptic.close()
         self.client.close()
 
 
@@ -343,6 +548,11 @@ def main() -> int:
     parser.add_argument("--force-hz", type=float, default=20.0)
     parser.add_argument("--touch-hz", type=float, default=5.0,
                         help="五指top_touch阵列读取频率，1..10Hz")
+    parser.add_argument("--haptic-listen-host", default="127.0.0.1")
+    parser.add_argument("--haptic-listen-port", type=int, default=9302)
+    parser.add_argument("--haptic-timeout", type=float, default=0.5)
+    parser.add_argument("--lock-angle-retreat", type=int, default=80,
+                        help="复用原程序LOCK_ANGLE_RETREAT")
     parser.add_argument("--enable-write", action="store_true", help="明确允许写角度寄存器")
     parser.add_argument("--safe-open", type=six_ints,
                         help="客户端断开/超时时写入的6路安全值")
@@ -363,6 +573,10 @@ def main() -> int:
         parser.error("--force-hz 必须在1~50之间")
     if args.touch_hz < 1 or args.touch_hz > 10:
         parser.error("--touch-hz 必须在1~10之间")
+    if args.haptic_timeout < 0.2 or args.haptic_timeout > 2.0:
+        parser.error("--haptic-timeout 必须在0.2~2.0秒")
+    if args.lock_angle_retreat < 0 or args.lock_angle_retreat > 200:
+        parser.error("--lock-angle-retreat 必须在0~200 tick")
     bridge = Bridge(args)
 
     def stop_handler(_signum, _frame):

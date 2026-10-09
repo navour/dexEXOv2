@@ -84,7 +84,7 @@ BLE_RECONNECT_DELAY = 1.0
 # 18 通道原始数据：前 13 位为弯曲传感器，末 5 位为外骨骼触觉
 # 末5位顺序：[拇指, 食指, 中指, 无名指, 小指]
 SENSOR_INDEX       = [1, 2, 3, 5, 9, 8]   # 弯曲通道映射 → [小指,无名,中指,食指,拇弯,拇旋]
-EXO_FORCE_BASELINE = 4.903                 # STM32最低有效输出阈值(N)；≤阈值视为0，>阈值保留绝对力原值
+EXO_FORCE_BASELINE = 4.903                 # 外骨骼BLE触觉零偏(N)，减去后才是真实力
 
 # ===== 灵巧手角度范围 =====
 HAND_ANGLE_MIN     = 150    # 伸直（最小值）
@@ -234,7 +234,7 @@ class SharedData:
         self.bend_raw: List[float] = [0.0] * 18
         self.bend_updated = False
 
-        # 外骨骼触觉目标力（末5位，已做4.903N阈值开关，未减阈值） [拇,食,中,无,小]
+        # 外骨骼触觉目标力（末5位，已去基线） [拇,食,中,无,小]
         self.exo_force: List[float] = [0.0] * NUM_FINGERS
 
         # 灵巧手触觉反馈力（DDS） [拇,食,中,无,小]

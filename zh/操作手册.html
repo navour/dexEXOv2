@@ -1,0 +1,2286 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>G1 遥操操作手册 · 全部组合</title>
+<style>
+:root{
+  --bg:#0e1418; --panel:#151d23; --panel2:#1b252c; --line:#26343d;
+  --fg:#dde6ec; --fg2:#8fa3b0; --accent:#3fd0c9; --accent2:#7ee0da;
+  --warn:#f0a742; --danger:#e8615a; --ok:#5fca7d; --code:#0a0f12;
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#f6f8fa; --panel:#fff; --panel2:#eef2f5; --line:#d8e0e6;
+    --fg:#1a2429; --fg2:#5b6b76; --accent:#0f8a84; --accent2:#0b6b66; --code:#111b20;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1418; --panel:#151d23; --panel2:#1b252c; --line:#26343d;
+  --fg:#dde6ec; --fg2:#8fa3b0; --accent:#3fd0c9; --accent2:#7ee0da; --code:#0a0f12;
+}
+:root[data-theme="light"]{
+  --bg:#f6f8fa; --panel:#fff; --panel2:#eef2f5; --line:#d8e0e6;
+  --fg:#1a2429; --fg2:#5b6b76; --accent:#0f8a84; --accent2:#0b6b66; --code:#111b20;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:15px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans CJK SC",
+       "Source Han Sans SC","Microsoft YaHei",sans-serif;
+}
+.layout{display:flex; min-height:100vh; align-items:flex-start}
+
+#side{
+  position:sticky; top:0; flex:0 0 268px; height:100vh; overflow-y:auto;
+  background:var(--panel); border-right:1px solid var(--line); padding:14px 0 40px;
+}
+#side h1{font-size:15px; margin:4px 16px 2px; letter-spacing:.02em}
+#side .sub{font-size:12px; color:var(--fg2); margin:0 16px 12px}
+#q{
+  width:calc(100% - 32px); margin:0 16px 12px; padding:8px 10px;
+  background:var(--panel2); color:var(--fg);
+  border:1px solid var(--line); border-radius:8px; font:inherit; font-size:13px;
+}
+#q:focus{outline:none; border-color:var(--accent)}
+#side a{
+  display:block; text-decoration:none; color:var(--fg2);
+  padding:5px 16px; font-size:13.5px; border-left:2px solid transparent;
+}
+#side a:hover{color:var(--fg); background:var(--panel2)}
+#side a.active{color:var(--accent); border-left-color:var(--accent); background:var(--panel2)}
+#side a.nav-group{
+  color:var(--fg); font-weight:650; margin-top:14px; font-size:13px;
+  letter-spacing:.02em; opacity:.9; border-left-color:var(--line);
+}
+#side a.nav-item{padding-left:26px}
+#side a.nav-sub{padding-left:40px; font-size:12.5px; opacity:.85}
+#side a.hide{display:none}
+
+main{flex:1 1 auto; min-width:0; padding:28px 40px 120px; max-width:1080px}
+h1,h2,h3,h4{line-height:1.35}
+h1{font-size:24px; margin:44px 0 18px; padding-bottom:10px; border-bottom:2px solid var(--accent)}
+h1:first-child{margin-top:0}
+h2{
+  font-size:20px; margin:38px 0 14px; padding:10px 14px;
+  background:var(--panel); border-left:3px solid var(--accent); border-radius:0 8px 8px 0;
+}
+h3{font-size:16.5px; margin:26px 0 10px; color:var(--accent2)}
+h4{font-size:15px; margin:20px 0 8px; color:var(--fg)}
+.anchor{float:left; margin-left:-.9em; padding-right:.3em; color:var(--fg2);
+        opacity:0; text-decoration:none; font-weight:400}
+h1:hover .anchor,h2:hover .anchor{opacity:.5}
+p,li{margin:.5em 0}
+a{color:var(--accent)}
+hr{border:none; border-top:1px solid var(--line); margin:34px 0}
+strong{color:var(--fg); font-weight:650}
+
+code{
+  background:var(--panel2); padding:.12em .4em; border-radius:5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.88em;
+  border:1px solid var(--line);
+}
+pre{
+  background:var(--code); border:1px solid var(--line); border-radius:10px;
+  padding:14px 16px; overflow-x:auto; position:relative; margin:12px 0;
+}
+pre code{background:none; border:none; padding:0; color:#d7e6e4; font-size:13px; line-height:1.65}
+.copy{
+  position:absolute; top:8px; right:8px; padding:3px 10px; font-size:11.5px;
+  background:var(--panel2); color:var(--fg2); border:1px solid var(--line);
+  border-radius:6px; cursor:pointer; opacity:0; transition:opacity .15s; font-family:inherit;
+}
+pre:hover .copy{opacity:1}
+.copy:hover{color:var(--accent); border-color:var(--accent)}
+.copy.done{color:var(--ok); border-color:var(--ok); opacity:1}
+
+.tablewrap{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:13.5px}
+th,td{border:1px solid var(--line); padding:7px 11px; text-align:left; vertical-align:top}
+th{background:var(--panel); font-weight:650}
+tr:nth-child(even) td{background:color-mix(in srgb, var(--panel) 45%, transparent)}
+
+blockquote{
+  margin:14px 0; padding:10px 16px; border-left:3px solid var(--fg2);
+  background:var(--panel); border-radius:0 8px 8px 0; color:var(--fg2);
+}
+blockquote strong{color:var(--fg)}
+.warnbox{border-left-color:var(--warn) !important}
+.dangerbox{border-left-color:var(--danger) !important}
+
+#top,#theme{
+  position:fixed; right:22px; width:40px; height:40px; border-radius:50%;
+  background:var(--panel); color:var(--fg2); border:1px solid var(--line);
+  cursor:pointer; font-size:16px;
+}
+#top{bottom:22px; display:none}
+#theme{bottom:70px}
+#top:hover,#theme:hover{color:var(--accent); border-color:var(--accent)}
+
+@media (max-width:900px){
+  .layout{display:block}
+  #side{position:static; width:auto; height:auto; flex:none;
+        border-right:none; border-bottom:1px solid var(--line)}
+  #side a{display:inline-block; border-left:none}
+  #side a.nav-item,#side a.nav-sub{padding-left:16px}
+  main{padding:20px 16px 100px}
+}
+@media print{
+  #side,#top,#theme,.copy{display:none}
+  main{padding:0; max-width:none}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav id="side">
+  <h1>G1 遥操操作手册</h1>
+  <div class="sub">全部组合 · 2026-08-26</div>
+  <input id="q" type="search" placeholder="搜索：左手 / 腰 / 急停 / 标定 / VR …" autocomplete="off">
+  <a class="nav-group" href="#sec1" data-t="操作手册：全部组合（两种模式 / 图形手套上位机 / 质量门已关）">操作手册：全部组合（两种模式 / 图形手套上位机 / 质量门已关）</a>
+<a class="nav-group" href="#sec2" data-t="1 · 开工前必读">1 · 开工前必读</a>
+<a class="nav-item" href="#sec3" data-t="1.1 · 这份和标准流程的三处不同">1.1 · 这份和标准流程的三处不同</a>
+<a class="nav-item" href="#sec4" data-t="1.2 · 先定模式：armsdk 还是 lowcmd">1.2 · 先定模式：armsdk 还是 lowcmd</a>
+<a class="nav-item" href="#sec8" data-t="1.3 · 急停：出事了按什么">1.3 · 急停：出事了按什么</a>
+<a class="nav-item" href="#sec13" data-t="1.4 · 组合速查表">1.4 · 组合速查表</a>
+<a class="nav-item" href="#sec14" data-t="1.5 · 通用：三个终端">1.5 · 通用：三个终端</a>
+<a class="nav-group" href="#sec18" data-t="2 · 连接机器人（ssh / wifi / 网线）">2 · 连接机器人（SSH / WiFi / 网线）</a>
+<a class="nav-item" href="#sec19" data-t="2.1 · 走 wifi（默认，全无线）">2.1 · 走 WiFi（默认，全无线）</a>
+<a class="nav-item" href="#sec21" data-t="2.2 · 走网线直连（最稳）">2.2 · 走网线直连（最稳）</a>
+<a class="nav-item" href="#sec22" data-t="2.3 · 给机器人配 wifi（首次，或换了路由器）">2.3 · 给机器人配 WiFi（首次，或换了路由器）</a>
+<a class="nav-item" href="#sec23" data-t="2.4 · pc 上的代理会挡住机器人">2.4 · PC 上的代理会挡住机器人</a>
+<a class="nav-item" href="#sec24" data-t="2.5 · 部署代码到机器人（首次 / 改过代码后）">2.5 · 部署代码到机器人（首次 / 改过代码后）</a>
+<a class="nav-group" href="#sec25" data-t="3 · 标定（第一次用 / 换人 / 换环境才做）">3 · 标定（第一次用 / 换人 / 换环境才做）</a>
+<a class="nav-item" href="#sec26" data-t="3.1 · 什么时候要重做">3.1 · 什么时候要重做</a>
+<a class="nav-item" href="#sec27" data-t="3.2 · imu 磁力计校准（5 个逐个做）">3.2 · IMU 磁力计校准（5 个逐个做）</a>
+<a class="nav-item" href="#sec28" data-t="3.3 · 手臂标定（imu → 关节角）">3.3 · 手臂标定（IMU → 关节角）</a>
+<a class="nav-item" href="#sec35" data-t="3.4 · 手套：链路 + 磁校准 + 手掌标定（双手一起）">3.4 · 手套：链路 + 磁校准 + 手掌标定（双手一起）</a>
+<a class="nav-item" href="#sec36" data-t="3.5 · 手套：双手五姿势映射标定">3.5 · 手套：双手五姿势映射标定</a>
+<a class="nav-item" href="#secgloveui" data-t="3.6 · 数据手套图形上位机（推荐）">3.6 · 数据手套图形上位机（推荐）</a>
+<a class="nav-group" href="#sec38" data-t="4 · 只跑手（不碰电机，不用吊装，两种模式通用）">4 · 只跑手（不碰电机，不用吊装，两种模式通用）</a>
+<a class="nav-item" href="#sec39" data-t="4.1 · 单独右手">4.1 · 单独右手</a>
+<a class="nav-item" href="#sec40" data-t="4.2 · 单独左手">4.2 · 单独左手</a>
+<a class="nav-item" href="#sec41" data-t="4.3 · 双手（手臂不动）">4.3 · 双手（手臂不动）</a>
+<a class="nav-group" href="#sec42" data-t="5 · 只跑手臂（手一动不动）">5 · 只跑手臂（手一动不动）</a>
+<a class="nav-item" href="#sec43" data-t="5.1 · 单独右臂">5.1 · 单独右臂</a>
+<a class="nav-item" href="#sec44" data-t="5.2 · 单独左臂">5.2 · 单独左臂</a>
+<a class="nav-item" href="#sec45" data-t="5.3 · 双臂">5.3 · 双臂</a>
+<a class="nav-group" href="#sec46" data-t="6 · 手臂 + 手">6 · 手臂 + 手</a>
+<a class="nav-item" href="#sec47" data-t="6.1 · 右臂 + 右手">6.1 · 右臂 + 右手</a>
+<a class="nav-item" href="#sec48" data-t="6.2 · 左臂 + 左手">6.2 · 左臂 + 左手</a>
+<a class="nav-item" href="#sec49" data-t="6.3 · 双臂 + 双手（全功能）">6.3 · 双臂 + 双手（全功能）</a>
+<a class="nav-group" href="#sec50" data-t="7 · 叠加项">7 · 叠加项</a>
+<a class="nav-item" href="#sec51" data-t="7.1 · 手 + 手臂 + 腰（全套完整指令）">7.1 · 手 + 手臂 + 腰（全套完整指令）</a>
+<a class="nav-sub" href="#sec52" data-t="7.1.1 · 双臂 + 双手 + 腰（= 6.3 + 腰）">7.1.1 · 双臂 + 双手 + 腰（= 6.3 + 腰）</a>
+<a class="nav-sub" href="#sec53" data-t="7.1.2 · 左臂 + 左手 + 腰（= 6.2 + 腰）">7.1.2 · 左臂 + 左手 + 腰（= 6.2 + 腰）</a>
+<a class="nav-item" href="#sec57" data-t="7.2 · vr 眼镜 / 显示（8443 操作台）">7.2 · VR 眼镜 / 显示（8443 操作台）</a>
+<a class="nav-item" href="#secvr0" data-t="7.3 · vr 沉浸 + 目标描边（8444 webxr）">7.3 · VR 沉浸 + 目标描边（8444 WebXR）</a>
+<a class="nav-item" href="#sec65" data-t="7.4 · 没有机器人，只在仿真里跑">7.4 · 没有机器人，只在仿真里跑</a>
+<a class="nav-item" href="#secrm0" data-t="7.5 · 更快响应（--response-mode）">7.5 · 更快响应（--response-mode）</a>
+<a class="nav-sub" href="#secrm1" data-t="7.5.1 · 双臂 + 双手 + 腰 + 快速响应">7.5.1 · 双臂 + 双手 + 腰 + 快速响应</a>
+<a class="nav-sub" href="#secrm2" data-t="7.5.2 · 双臂 + 双手 + 腰 + 平衡响应">7.5.2 · 双臂 + 双手 + 腰 + 平衡响应</a>
+<a class="nav-group" href="#sec66" data-t="8 · 收工（所有组合通用）">8 · 收工（所有组合通用）</a>
+<a class="nav-group" href="#sec67" data-t="9 · 参数表">9 · 参数表</a>
+<a class="nav-item" href="#sec68" data-t="9.1 · 终端 a（接收端）">9.1 · 终端 A（接收端）</a>
+<a class="nav-item" href="#sec69" data-t="9.2 · 终端 b（上位机）">9.2 · 终端 B（上位机）</a>
+<a class="nav-item" href="#sec70" data-t="9.3 · 数据手套图形上位机">9.3 · 数据手套图形上位机</a>
+<a class="nav-item" href="#sec71" data-t="9.4 · 上位机按键">9.4 · 上位机按键</a>
+<a class="nav-group" href="#sec72" data-t="10 · 不动的时候按这个顺序查">10 · 不动的时候按这个顺序查</a>
+<a class="nav-group" href="#sec73" data-t="11 · 回滚：把标定质量门加回去">11 · 回滚：把标定质量门加回去</a>
+<a class="nav-group" href="#sec74" data-t="12 · 地址速查">12 · 地址速查</a>
+</nav>
+<main id="doc">
+<h1 id="sec1"><a class="anchor" href="#sec1">#</a>操作手册：全部组合（两种模式 / 图形手套上位机 / 质量门已关）</h1>
+<p><strong>更新于 2026-08-26，对应当前这台机器，每一节都可以整段复制粘贴。</strong>
+和 <code>使用说明.md</code> 的区别见 <strong>1.1</strong>，先看完再动手。</p>
+<blockquote>
+<p><strong>2026-08-26 手套流程更新：</strong>数据手套统一使用
+<code>/home/hong/unitree/最新直接能用的代码/mhandpro/studio.sh</code>
+图形上位机。<strong>手套的连接、标定、映射、状态检查和停止全部在界面中完成，
+不再要求操作员在命令行中输入手套诊断或遥操指令。</strong>
+数据手套震动反馈已停用；机器人端力反馈手套不受影响。</p>
+</blockquote>
+<p><strong>怎么用这份文档</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>章</th>
+<th>什么时候看</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong> 开工前必读</td>
+<td>每次开工都看 —— 选模式、急停、通用套路</td>
+</tr>
+<tr>
+<td><strong>2</strong> 连接机器人</td>
+<td>ping 不通、要换网线/WiFi、要部署代码时</td>
+</tr>
+<tr>
+<td><strong>3</strong> 标定</td>
+<td><strong>第一次用 / 换人 / 换环境 / 重绑 IMU</strong> 才做，平时跳过</td>
+</tr>
+<tr>
+<td><strong>4–7</strong> 按组合挑一节</td>
+<td>今天要跑什么就看哪一节，整段复制</td>
+</tr>
+<tr>
+<td><strong>8–12</strong></td>
+<td>收工、参数表、查错、回滚、地址</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="sec2"><a class="anchor" href="#sec2">#</a>1 · 开工前必读</h1>
+<h2 id="sec3"><a class="anchor" href="#sec3">#</a>1.1 · 这份和标准流程的三处不同</h2>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th><code>使用说明.md</code></th>
+<th>这份</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>控制接口</td>
+<td>只写 <code>armsdk</code></td>
+<td><strong>两种都给全</strong>，每节的终端 A 都有两行</td>
+<td>你有时在调试模式、有时在正常模式，命令只差一个参数</td>
+</tr>
+<tr>
+<td>机器人力反馈触觉</td>
+<td>没提</td>
+<td><strong>所有终端 A 命令默认带 <code>--hand-haptic --hand-touch-hz 10</code></strong></td>
+<td>供你现在的力反馈手套使用；数据手套上位机已不消费这条链路</td>
+</tr>
+<tr>
+<td>标定质量门</td>
+<td>静态 30° / 验证 40°</td>
+<td><strong>已全部关闭</strong></td>
+<td>按要求关的。界面上超门槛的会显示「已放行(超门槛)」</td>
+</tr>
+<tr>
+<td>翻掌一致性门</td>
+<td>≤30°</td>
+<td><strong>≤60°</strong></td>
+<td>小臂 IMU 贴在数据手套腕部控制器上，测的是<strong>手</strong>不是小臂，掌心朝上/朝下时腕角本就不同，稳定读 46~50°。见 3.3</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sec4"><a class="anchor" href="#sec4">#</a>1.2 · 先定模式：armsdk 还是 lowcmd</h2>
+<p><strong>这是唯一需要你判断的地方，后面每一节的终端 A 都按它挑一行。</strong></p>
+<pre><code class="language-bash">cd ~/zh &amp;&amp; python3 g1_ctl.py status
+</code></pre>
+<table>
+<thead>
+<tr>
+<th><code>status</code> 返回</th>
+<th>模式</th>
+<th>终端 A 用哪行</th>
+<th>机器人</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FSM ID: 200</code></td>
+<td><strong>正常模式</strong></td>
+<td>不给 <code>--mode</code>（= <code>armsdk</code>）</td>
+<td><strong>站在地上</strong></td>
+</tr>
+<tr>
+<td>别的 FSM 数字</td>
+<td>正常模式，只是没到顶</td>
+<td>先爬梯（下面），再同上</td>
+<td>站在地上</td>
+</tr>
+<tr>
+<td><strong><code>code=3102</code></strong></td>
+<td><strong>调试模式</strong>（运控服务已停）</td>
+<td>加 <code>--mode lowcmd</code></td>
+<td><strong>必须吊装悬空</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="sec5"><a class="anchor" href="#sec5">#</a>两种模式的实际差别</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>armsdk</code>（正常模式）</th>
+<th><code>lowcmd</code>（调试模式）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>写哪些电机</td>
+<td>只写腰 12–14 + 双臂 15–28，<strong>腿一个都不碰</strong></td>
+<td><strong>全部 29 个</strong>，下半身驱到零位</td>
+</tr>
+<tr>
+<td>平衡</td>
+<td>官方运控服务照常平衡</td>
+<td><strong>没有任何平衡控制器</strong></td>
+</tr>
+<tr>
+<td>机器人姿态</td>
+<td><strong>站在地上</strong></td>
+<td><strong>必须吊装悬空</strong></td>
+</tr>
+<tr>
+<td>软件急停 <code>g1_ctl.py damp</code></td>
+<td><strong>可用</strong></td>
+<td><strong>失效</strong>（返回 3102）</td>
+</tr>
+<tr>
+<td>遥控器 <code>L2+B</code></td>
+<td><strong>可用</strong></td>
+<td><strong>失效</strong>（走同一条链路）</td>
+</tr>
+<tr>
+<td>启动</td>
+<td>不问，自动把接管权重 0→1</td>
+<td><strong>连问两次确认，都答 <code>yes</code></strong></td>
+</tr>
+<tr>
+<td>退出</td>
+<td>自动把权重 1→0 交还控制权</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>能用 armsdk 就别用 lowcmd</strong> —— 急停差着一整条命。</p>
+<h3 id="sec6"><a class="anchor" href="#sec6">#</a>FSM 不是 200 时爬梯（仅正常模式可行）</h3>
+<p><strong>先读 <code>status</code> 的两行</strong>，它们决定你从哪一级起步、走哪条分支：</p>
+<pre><code>        FSM ID: code=0  value=0   &lt;- ZeroTorque 零力矩 (全身瘫软, 必须吊着)
+  躯干姿态: roll=+0.027 pitch=-0.005 yaw=-0.838 rad   -&gt; 直立
+</code></pre>
+<ul>
+<li><code>code=0</code> = 运控服务在跑（<code>code=3102</code> 是调试模式，见本节末尾）</li>
+<li><code>value</code> = 现在在哪一级</li>
+<li><strong><code>躯干姿态</code> 那行的结论字（直立 / 倾斜 / 趴着躺着）决定用 <code>prepare</code> 还是 <code>lie2stand</code></strong>
+  （由 pitch 判定：<code>|pitch|&lt;0.35</code> 直立，<code>&gt;1.0</code> 趴着/躺着）</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>FSM</th>
+<th>含义</th>
+<th>机器人现在</th>
+<th>下一条命令</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>0</strong></td>
+<td>ZeroTorque 零力矩，<strong>全身瘫软</strong></td>
+<td>必须吊着 / 趴着</td>
+<td><strong><code>damp</code></strong></td>
+</tr>
+<tr>
+<td>1</td>
+<td>Damp 阻尼态（安全停靠态）</td>
+<td>可以吊着</td>
+<td><code>prepare</code>（直立）/ <code>lie2stand</code>（趴着）</td>
+</tr>
+<tr>
+<td>2 / 3 / 4</td>
+<td>蹲下 / 坐下 / 站立锁定</td>
+<td>脚在地上</td>
+<td><code>start</code></td>
+</tr>
+<tr>
+<td>200</td>
+<td>主运控，<strong><code>arm_sdk</code> 可用</strong></td>
+<td>站着</td>
+<td>不用爬</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4>第 1 步 · <code>damp</code>（腿不动，这一步安全）</h4>
+<pre><code class="language-bash">cd ~/zh
+python3 g1_ctl.py damp
+</code></pre>
+<p>FSM <code>0 → 1</code>。<strong>不在 <code>DANGEROUS</code> 集合里，不问确认、腿不会动</strong> —— 只是给关节加
+阻尼，机器人不再完全软、姿态能大致撑住。</p>
+<blockquote>
+<p>零力矩下直接跳 <code>prepare</code> 会被脚本挡掉：
+<code>[!] 当前是零力矩(0), 不能直接跳站立锁定。先跑 g1_ctl.py damp。</code></p>
+</blockquote>
+<h4>第 2 步 · 动手：把脚放到地上（<strong>没有命令</strong>）</h4>
+<p><code>damp</code> 之后把机器人降下来，让<strong>双脚踏实着地</strong>；吊装带留着但放松，只当防坠、
+不承重。</p>
+<p>下面两步是要它<strong>自己站起来并承重</strong>的。脚不着地的话，腿只是在空中伸展，
+到不了预期状态。</p>
+<h4>第 3 步 · <code>prepare</code> → <code>start</code></h4>
+<pre><code class="language-bash">python3 g1_ctl.py prepare     # → FSM 4 站立锁定   ⚠️ 腿会动
+python3 g1_ctl.py start       # → FSM 200 主运控   ⚠️ 站起来
+python3 g1_ctl.py status      # 确认真的是 200
+</code></pre>
+<blockquote>
+<p>机器人是<strong>趴着/躺着</strong>的话，第 3 步第一条换成
+<code>python3 g1_ctl.py lie2stand</code>（趴→站，FSM 702），之后同样 <code>start</code>。</p>
+</blockquote>
+<p>这两条都在 <code>DANGEROUS</code> 里，会弹确认框：</p>
+<pre><code>  即将执行: prepare   (当前 FSM=1 Damp 阻尼态)
+  这会让【腿】动。确认:
+    - 物理急停按钮伸手能按到
+    - 机器人周围 2 米内没有人和障碍物
+    - 如果机器人是吊着的, 吊具能承重且不会卡住
+  输入大写 YES 继续, 其它任何输入都会取消:
+</code></pre>
+<ul>
+<li><strong>必须输入大写 <code>YES</code></strong>，小写或直接回车都会取消</li>
+<li><strong>别加 <code>--yes</code> 跳过</strong></li>
+<li>每条执行完会等 1 秒复查，打印 <code>[+] 完成。FSM: 1 -&gt; 4 (...)</code>。
+  <strong>看到目标级数再敲下一条</strong>，别连着贴三行进去</li>
+</ul>
+<h4>一眼看全</h4>
+<pre><code>FSM 0  ──damp──&gt;  FSM 1  ──[动手: 把脚放到地上]──&gt;  ──prepare──&gt;  FSM 4  ──start──&gt;  FSM 200
+零力矩            阻尼态                                          站立锁定          主运控
+瘫软吊着          腿不动、不问确认                                ⚠️腿会动          ⚠️站起来
+                                                （趴着的话这里换 lie2stand）
+</code></pre>
+<p>⚠️ 全程周围清空 2 米。整条梯子等价于遥控器 <code>L2+B</code> → <code>L2+↑</code> → <code>R1+X</code>。</p>
+<p><strong>不能跳级，脚本会挡</strong>：FSM 0 时 <code>prepare</code> 被拒；<code>start</code> 只接受 FSM 1/2/4/706。</p>
+<blockquote>
+<p><code>start</code> 源码上也接受 FSM 1（可以从阻尼态直接起身），但<strong>还是走 <code>prepare</code> 那一级</strong> ——
+脚本自己的提示就是「顺序应该是 damp(1) → prepare(4) → start(200)」，
+先锁定站姿再进主运控，比从阻尼态直接起身可控。</p>
+</blockquote>
+<h4>到 200 之后</h4>
+<p>接收端<strong>不带 <code>--mode</code></strong> 就是 <code>armsdk</code>：</p>
+<pre><code class="language-bash">~/zh/start.sh --hand both --hand-haptic --hand-touch-hz 10
+</code></pre>
+<p><strong>软件急停这时候才是真管用的</strong> —— 再开一个 SSH 窗口（终端 D）停在这条上不回车：</p>
+<pre><code class="language-bash">cd ~/zh &amp;&amp; python3 g1_ctl.py damp
+</code></pre>
+<p>调试模式下它失效，正常模式下不是。遥控器 <code>L2+B</code> 同样恢复可用。</p>
+<hr />
+<p><strong><code>code=3102</code> 时爬不上去</strong> —— 调试模式的定义就是停掉运控服务，而这些指令全是
+发给它的（遥控器走同一条链路，所以那时遥控器也是失效的）。要么退出调试模式，
+要么吊装走 <code>--mode lowcmd</code>。</p>
+<blockquote>
+<p>怎么退出调试模式：仓库里没记。最稳的是<strong>重启机器人</strong>（运控服务会自启）；
+否则「当初怎么进的就怎么退」。</p>
+</blockquote>
+<h3 id="sec7"><a class="anchor" href="#sec7">#</a>⚠️ 走 lowcmd 时逐条确认</h3>
+<ol>
+<li><strong>机器人必须吊装悬空。</strong></li>
+<li><strong>软件急停和遥控器都失效</strong>，<strong>唯一的急停是物理按钮。</strong></li>
+<li><strong>标定质量门是关的</strong>，按空格不会有任何拦截。第一次先小幅度动。</li>
+</ol>
+<p>常规：电量 &gt; 50%、遥控器在手边、人离开手臂摆动范围和手指抓握范围。</p>
+<hr />
+<h2 id="sec8"><a class="anchor" href="#sec8">#</a>1.3 · 急停：出事了按什么</h2>
+<p><strong>开工前先把这一节读完，出事时没时间翻文档。</strong></p>
+<h3 id="sec9"><a class="anchor" href="#sec9">#</a>三条急停路，可靠性从高到低</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>手段</th>
+<th>正常模式</th>
+<th>调试模式</th>
+<th>走什么链路</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>物理急停按钮</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td><strong>硬件断电，不经过任何软件</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td>遥控器 <strong><code>L2+B</code></strong></td>
+<td>✅</td>
+<td>❌ 失效</td>
+<td>DDS → 运控服务</td>
+</tr>
+<tr>
+<td>3</td>
+<td>终端 D <code>g1_ctl.py damp</code></td>
+<td>✅</td>
+<td>❌ 失效（返回 3102）</td>
+<td>DDS → 运控服务（和 2 同一条）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>2 和 3 走的是同一条链路</strong> —— 网线一松、WiFi 一抖就到不了，运控服务停了就更没用。
+<strong>它们不是物理急停的替代品</strong>，是「手边更近的那个」。</p>
+<p>⚠️ <strong>走 <code>--mode lowcmd</code> 时 2 和 3 全部失效，唯一的急停是物理按钮。</strong> 这是
+「能用 armsdk 就别用 lowcmd」的主要理由。</p>
+<h3 id="sec10"><a class="anchor" href="#sec10">#</a>开工前先摆好终端 D</h3>
+<p>正常模式下多开一个 SSH 窗口，<strong>停在这条命令上不回车</strong>：</p>
+<pre><code class="language-bash">ssh unitree@192.168.3.78
+cd ~/zh &amp;&amp; python3 g1_ctl.py damp
+</code></pre>
+<p><code>damp</code> 不在 <code>DANGEROUS</code> 里，<strong>不问确认、敲下去立刻生效</strong>，这正是它能当急停的原因。</p>
+<blockquote>
+<p>⚠️ <strong><code>damp</code> 会让机器人瘫下去。</strong> 关节进阻尼态、失去平衡控制，站在地上的话会
+顺势坐/倒下去（阻尼让它是沉下去而不是自由落体，但仍然会倒）。这是急停该有的
+样子，不是故障 —— 所以只在真出事时用，别拿它当「暂停」。</p>
+</blockquote>
+<h3 id="sec11"><a class="anchor" href="#sec11">#</a>按症状选</h3>
+<table>
+<thead>
+<tr>
+<th>出什么事</th>
+<th>按什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>全面失控 / 上面都来不及</strong></td>
+<td><strong>物理急停按钮</strong></td>
+</tr>
+<tr>
+<td>手臂乱动、动作明显不对</td>
+<td>遥控器 <code>L2+B</code>；或终端 D 回车；或终端 A <code>Ctrl+C</code></td>
+</tr>
+<tr>
+<td>只是想让手臂停下来（不是出事）</td>
+<td><strong>终端 B 按 <code>空格</code></strong> —— 暂停跟随，手臂以 0.3 rad/s 慢慢回零</td>
+</tr>
+<tr>
+<td>手夹住东西</td>
+<td><strong>在数据手套图形上位机点红色「STOP · 停止真机映射并张手」</strong> → 手立刻张开；或直接拔手套 USB 接收器（0.5 秒后自动张开）</td>
+</tr>
+<tr>
+<td>想整套停掉</td>
+<td>终端 A <code>Ctrl+C</code> —— 自动「手张开 → 手臂回零 → 交还控制权」，<strong>要几秒</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="sec12"><a class="anchor" href="#sec12">#</a>这些不是急停，别指望它们救场</h3>
+<ul>
+<li><strong>终端 A <code>Ctrl+C</code></strong> 是<strong>优雅退出</strong>：手张开 → 双臂 3 秒回零 → armsdk 权重渐降到 0。
+  整个过程要好几秒，机器人在这期间还在动。</li>
+<li><strong>终端 B 按 <code>Q</code></strong> 只是关上位机。手臂那边要等 <strong>1 秒</strong>超时才开始慢速回零，
+  手要等 <strong>0.5 秒</strong>断流才张开。</li>
+<li><strong>拔网线 / 关 WiFi</strong> 等价于上一条，靠的是接收端的超时兜底，不是主动停止。</li>
+</ul>
+<blockquote>
+<p>这些兜底机制本身是可靠的（断流必张开、超时必回零、退出必交还控制权），
+但它们的设计目标是「链路断了别出危险」，<strong>不是「零点几秒内制动」</strong>。</p>
+</blockquote>
+<hr />
+<h2 id="sec13"><a class="anchor" href="#sec13">#</a>1.4 · 组合速查表</h2>
+<table>
+<thead>
+<tr>
+<th>我要做什么</th>
+<th>看哪节</th>
+<th>手臂动吗</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>单独右手</td>
+<td><strong>4.1</strong></td>
+<td>不动，<strong>不用吊装，也不用管模式</strong></td>
+</tr>
+<tr>
+<td>单独左手</td>
+<td><strong>4.2</strong></td>
+<td>不动</td>
+</tr>
+<tr>
+<td>双手</td>
+<td><strong>4.3</strong></td>
+<td>不动</td>
+</tr>
+<tr>
+<td>单独右臂</td>
+<td><strong>5.1</strong></td>
+<td>动</td>
+</tr>
+<tr>
+<td>单独左臂</td>
+<td><strong>5.2</strong></td>
+<td>动</td>
+</tr>
+<tr>
+<td>双臂</td>
+<td><strong>5.3</strong></td>
+<td>动</td>
+</tr>
+<tr>
+<td>右臂 + 右手</td>
+<td><strong>6.1</strong></td>
+<td>动</td>
+</tr>
+<tr>
+<td>左臂 + 左手</td>
+<td><strong>6.2</strong></td>
+<td>动</td>
+</tr>
+<tr>
+<td>双臂 + 双手</td>
+<td><strong>6.3</strong></td>
+<td>动</td>
+</tr>
+<tr>
+<td><strong>手 + 手臂 + 腰（全套）</strong></td>
+<td><strong>7.1</strong></td>
+<td>动</td>
+</tr>
+<tr>
+<td><strong>VR 眼镜 / 显示（8443 操作台）</strong></td>
+<td><strong>7.2</strong></td>
+<td>不动，<strong>只读，可与遥操同时开</strong></td>
+</tr>
+<tr>
+<td>没有机器人，只在仿真里看</td>
+<td><strong>7.4</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>跟手不够 / 想降延迟</strong></td>
+<td><strong>7.5</strong></td>
+<td>只改上位机一个参数，A、C 不动</td>
+</tr>
+</tbody>
+</table>
+<p><strong>先跑 4.1 或 4.2（单独一只手）</strong> —— 不碰电机、不用吊装、运控服务没起来也照跑，
+是验证整条链路最安全的一节。</p>
+<hr />
+<h2 id="sec14"><a class="anchor" href="#sec14">#</a>1.5 · 通用：三个终端</h2>
+<table>
+<thead>
+<tr>
+<th>终端</th>
+<th>在哪</th>
+<th>跑什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A</strong></td>
+<td>🤖 板载机（SSH <code>unitree@192.168.3.78</code>，密码 <code>123</code>）</td>
+<td>接收端</td>
+</tr>
+<tr>
+<td><strong>B</strong></td>
+<td>💻 PC</td>
+<td>上位机：IMU 解算、3D 界面、发指令</td>
+</tr>
+<tr>
+<td><strong>C</strong></td>
+<td>💻 PC</td>
+<td>手套（只有用到灵巧手时才需要）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>顺序永远是 A → B → C。</strong> 手套的 TCP 连接是在图形安全面板点「ARM 并启动」时才建立的，
+连不上就退出、<strong>不重试</strong>。</p>
+<h3 id="sec15"><a class="anchor" href="#sec15">#</a>关于力反馈手套的 <code>--hand both --hand-haptic --hand-touch-hz 10</code></h3>
+<p><strong>机器人力反馈触觉端口按手分，<code>--hand</code> 点名哪只才 bind 哪只：</strong></p>
+<table>
+<thead>
+<tr>
+<th><code>--hand</code></th>
+<th>bind 的触觉端口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>right</code></td>
+<td>只有 <strong>9201</strong></td>
+</tr>
+<tr>
+<td><code>left</code></td>
+<td>只有 <strong>9202</strong></td>
+</tr>
+<tr>
+<td><code>both</code></td>
+<td><strong>9201 + 9202</strong></td>
+</tr>
+</tbody>
+</table>
+<p>所以下面<strong>每一节的终端 A 都写 <code>--hand both --hand-haptic --hand-touch-hz 10</code></strong>，哪怕那一节只遥操
+一只手、甚至根本不用手。没数据的那只手不会乱动 —— 接收端每帧都收到「没数据」，
+一直朝张开走（<code>hands = result.get("hands") or {}</code> → <code>update(None)</code>）。</p>
+<p><strong>数据手套图形上位机不连接这两个端口，也不会震动。</strong>
+这一节的所有触觉参数都只是为机器人端力反馈手套保留。</p>
+<p><code>--hand-haptic</code> 必须配 <code>--hand</code>，所以<strong>连"只跑手臂"的几节也得给 <code>--hand both</code></strong>，
+否则 argparse 直接报错。</p>
+<p>起来后另开一个 SSH 窗口验证：</p>
+<pre><code class="language-bash">ss -ltnp | grep -E &quot;920[12]|930[12]&quot;
+</code></pre>
+<p>要看到 <strong>9201 和 9202 各一行 LISTEN</strong>。</p>
+<blockquote>
+<p><strong>代价</strong>：力反馈触觉读跑在 50Hz 控制线程的同一条 socket 上，会让手指动作偶尔顿一下。
+下面每条命令都写死 <code>--hand-touch-hz 10</code>（默认 5）。觉得顿就往下调，<code>--hand-touch-hz 1</code>
+是最省的一档。<strong>不用力反馈手套</strong>就把 <code>--hand-haptic</code> 去掉，其余不变。</p>
+</blockquote>
+<h3 id="sec16"><a class="anchor" href="#sec16">#</a>每次起接收端之前，先查旧进程（手乱动的头号原因）</h3>
+<pre><code class="language-bash">ps -eo pid,etime,cmd | grep -E &quot;[r]obot_arm_receiver&quot;
+</code></pre>
+<p>多出来的用 <strong>PID</strong> 杀：</p>
+<pre><code class="language-bash">kill &lt;PID&gt;          # 用 PID；不要 -9，不要 pkill -f
+</code></pre>
+<blockquote>
+<p><code>-9</code> 跳过退出流程，手停在当时的握持姿态上不张开。
+<code>pkill -f robot_arm_receiver</code> 会连你自己的 SSH 会话一起杀掉。</p>
+</blockquote>
+<h3 id="sec17"><a class="anchor" href="#sec17">#</a>每次起上位机之前</h3>
+<pre><code class="language-bash">pkill -f &quot;[d]ual_arm_viz&quot;
+</code></pre>
+<hr />
+<h1 id="sec18"><a class="anchor" href="#sec18">#</a>2 · 连接机器人（SSH / WiFi / 网线）</h1>
+<p>机器人上有<strong>两张网</strong>，分清楚，这是最常见的困惑来源：</p>
+<pre><code>① 外部网络（WiFi 或 网线接路由器）        ② 机器人内网 192.168.123.x
+   PC、5 个 IMU、机器人 wlan0                板载机 .164、主控 .161
+                                             因时右手 .211、因时左手 .210
+</code></pre>
+<p><strong>灵巧手永远在 ② 上，PC 永远够不着它。</strong> 所以手的驱动跑在板载机上，PC 只通过
+UDP 发闭合度。这是架构前提，不是妥协。</p>
+<h2 id="sec19"><a class="anchor" href="#sec19">#</a>2.1 · 走 WiFi（默认，全无线）</h2>
+<pre><code class="language-bash">ssh unitree@192.168.3.78
+</code></pre>
+<blockquote>
+<p>密码 <code>123</code>。加 keepalive 防止长时间不敲命令被断：
+<code>ssh -o ServerAliveInterval=30 unitree@192.168.3.78</code></p>
+</blockquote>
+<p><strong>前提：PC、5 个 IMU、机器人必须在同一个 SSID 下</strong>（IMU 发现走 UDP 4212 广播，
+跨网段失效）。优先 5GHz。</p>
+<p>连上之前先测一下无线够不够用：</p>
+<pre><code class="language-bash">ping -c 40 -i 0.2 192.168.3.78
+# 好的结果：0% 丢包，avg &lt; 10ms，max &lt; 25ms
+</code></pre>
+<p>⚠️ <strong>绝对不要给接收端加 <code>--iface wlan0</code>。</strong> 接收端跑在机器人上，DDS 全程在机器人
+内部走 eth0，WiFi 上只有 UDP 9527，这是安全的。<code>--iface wlan0</code> 会把 DDS 本身架到
+WiFi 上，500Hz 实时流一抖就断控。</p>
+<h3 id="sec20"><a class="anchor" href="#sec20">#</a>ping 不通 = IP 变了</h3>
+<p><strong>G1 的 WiFi 地址走 DHCP，重启后会变</strong>（2026-08-04 就从 <code>.85</code> 变成了 <code>.78</code>）。</p>
+<p>手边能看到 G1 终端的话最快：</p>
+<pre><code class="language-bash">ip -4 addr show | grep 'inet 192.168.3'
+</code></pre>
+<p>只能从 PC 找的话，三步。先扫网段：</p>
+<pre><code class="language-bash">for i in $(seq 1 254); do (ping -c1 -W1 192.168.3.$i &gt;/dev/null 2&gt;&amp;1 &amp;&amp; echo &quot;192.168.3.$i UP&quot;) &amp; done; wait
+</code></pre>
+<p>再看谁开了 22 端口：</p>
+<pre><code class="language-bash">for ip in &lt;上一步列出的地址&gt;; do timeout 1 bash -c &quot;&lt;/dev/tcp/$ip/22&quot; 2&gt;/dev/null &amp;&amp; echo &quot;$ip:22 OPEN&quot;; done
+</code></pre>
+<p><strong>最后这步才是决定性的</strong> —— G1 板载机的 80 端口跑着宇树自己的升级页：</p>
+<pre><code class="language-bash">curl -s --noproxy '*' http://&lt;候选IP&gt;/ | grep -o '&lt;title&gt;[^&lt;]*&lt;/title&gt;'
+# G1 会返回：&lt;title&gt;unitree-upgrade&lt;/title&gt;
+</code></pre>
+<blockquote>
+<p>同网段的 <strong><code>192.168.3.76</code> 是树莓派</strong>（Debian 12，MAC 前缀 <code>2c:cf:67</code>），别登错。
+G1 是 Ubuntu 20.04。</p>
+</blockquote>
+<p>拿到新 IP 后，本手册里所有 <code>192.168.3.78</code> 都要跟着换。</p>
+<h2 id="sec21"><a class="anchor" href="#sec21">#</a>2.2 · 走网线直连（最稳）</h2>
+<p>💻 <strong>在 PC 上</strong>：</p>
+<pre><code class="language-bash">ip -br addr                                            # 先看有线网卡名
+sudo ip addr add 192.168.123.222/24 dev enp0s31f6      # 网卡名按实际改
+ping -c3 192.168.123.164                               # 通了才继续
+</code></pre>
+<pre><code class="language-bash">ssh unitree@192.168.123.164
+</code></pre>
+<p><strong>这时本手册所有命令里的 <code>192.168.3.78</code> 换成 <code>192.168.123.164</code></strong>，包括
+<code>--udp-target</code>。</p>
+<p>⚠️ <strong>PC 还要同时连 IMU 那个 WiFi</strong> —— IMU 数据只到 PC 为止，机器人不需要连 WiFi。</p>
+<blockquote>
+<p>同网段的 <code>192.168.123.161</code> 是<strong>主控</strong>，能 ping 通但<strong>不开 SSH</strong>，别连错。</p>
+</blockquote>
+<h2 id="sec22"><a class="anchor" href="#sec22">#</a>2.3 · 给机器人配 WiFi（首次，或换了路由器）</h2>
+<p><strong>这一步需要先用网线或显示器进机器人</strong>（要 sudo，密码 <code>123</code>）：</p>
+<p>🤖 <strong>在机器人上</strong>：</p>
+<pre><code class="language-bash">sudo nmcli device wifi connect &quot;你的WiFi名&quot; password &quot;你的WiFi密码&quot; ifname wlan0
+</code></pre>
+<pre><code class="language-bash">ip -br addr show wlan0                                 # 记下地址，例如 192.168.3.78
+</code></pre>
+<p><strong>这条 profile 会持久化，机器人重启自动重连</strong>（已实测）。但地址是 DHCP 分配的，
+重启后<strong>可能变</strong>，见 2.1 末尾。</p>
+<p>看已保存了哪些网络 / 切换 / 删除：</p>
+<pre><code class="language-bash">nmcli connection show                                  # 已保存的连接
+nmcli device wifi list                                 # 附近的热点
+sudo nmcli connection up &quot;WiFi名&quot;                      # 切到某个
+sudo nmcli connection delete &quot;WiFi名&quot;                  # 删掉不用的
+</code></pre>
+<h2 id="sec23"><a class="anchor" href="#sec23">#</a>2.4 · PC 上的代理会挡住机器人</h2>
+<p>本机跑着 Mihomo（<code>198.18.0.1</code>）。表现为浏览器打不开 8443、或者 curl 卡住/报错。</p>
+<pre><code class="language-bash"># 终端里临时清掉
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+
+# curl 单次绕过
+curl -k --noproxy '*' -I https://192.168.3.78:8443
+</code></pre>
+<p>浏览器侧在代理软件里把 <code>192.168.3.0/24</code> 加入<strong>直连/绕过</strong>规则。</p>
+<blockquote>
+<p>SSH 和 UDP 9527 不走代理，所以遥操本身不受影响 —— <strong>只有网页会中招。</strong></p>
+</blockquote>
+<h2 id="sec24"><a class="anchor" href="#sec24">#</a>2.5 · 部署代码到机器人（首次 / 改过代码后）</h2>
+<p>工作目录是 <strong><code>~/zh</code></strong>。</p>
+<p>⚠️ <strong>先比对，再决定要不要拷。</strong> 板载机上的代码<strong>可能比本地文件夹新</strong>（比如
+<code>--hand-haptic</code> 那套触觉就只在板载机上有），无脑 <code>scp</code> 会把它静默覆盖掉。</p>
+<pre><code class="language-bash">ROBOT=192.168.3.78           # 或网线的 192.168.123.164
+cd /home/hong/unitree/最新直接能用的代码
+for f in robot_arm_receiver teleop_protocol waist_follow hand_driver hand_check g1_ctl g1_jog; do
+  r=$(ssh unitree@$ROBOT &quot;md5sum ~/zh/$f.py 2&gt;/dev/null | cut -d' ' -f1&quot;)
+  l=$(md5sum 机器人端/$f.py | cut -d' ' -f1)
+  [ &quot;$r&quot; = &quot;$l&quot; ] &amp;&amp; echo &quot;同   $f.py&quot; || echo &quot;不同 $f.py&quot;
+done
+</code></pre>
+<p>不同的先拷下来 <code>diff</code> 看清谁新，<strong>只推确实要覆盖的那一个</strong>：</p>
+<pre><code class="language-bash">scp 机器人端/robot_arm_receiver.py unitree@$ROBOT:~/zh/
+ssh unitree@$ROBOT 'chmod +x ~/zh/start.sh &amp;&amp; rm -rf ~/zh/__pycache__'
+</code></pre>
+<blockquote>
+<p>板载机是 Python 3.8，<strong>改完记得删 <code>__pycache__</code></strong>，旧 pyc 会顶掉新文件。</p>
+<p><code>hand_mapping.py</code> 来自 <code>PC端/</code>，全仓库只有这一份，<strong>不要在机器人端另存副本</strong>
+—— 通道表一分叉，左右手就会对不上，而且不报错。</p>
+</blockquote>
+<hr />
+<h1 id="sec25"><a class="anchor" href="#sec25">#</a>3 · 标定（第一次用 / 换人 / 换环境才做）</h1>
+<h2 id="sec26"><a class="anchor" href="#sec26">#</a>3.1 · 什么时候要重做</h2>
+<table>
+<thead>
+<tr>
+<th>情况</th>
+<th>要重做什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>什么都没变</strong></td>
+<td><strong>都不用。</strong> 标定结果已存盘，启动自动加载</td>
+</tr>
+<tr>
+<td>换了房间 / 磁环境变了</td>
+<td>IMU 磁力计校准（<strong>3.2</strong>）+ 手套磁校准（<strong>3.4</strong>）</td>
+</tr>
+<tr>
+<td>重新绑了 IMU</td>
+<td>手臂标定（<strong>3.3</strong>）</td>
+</tr>
+<tr>
+<td>换了操作员</td>
+<td>手臂标定（<strong>3.3</strong>）+ 手套全套（<strong>3.4</strong>、<strong>3.5</strong>）</td>
+</tr>
+<tr>
+<td>手臂上加了外骨骼等装备</td>
+<td>手臂标定（<strong>3.3</strong>），<strong>戴着装备标</strong></td>
+</tr>
+<tr>
+<td>四指跟得好、拇指位置不对</td>
+<td>只在数据手套界面重做「双手 → 五姿势映射」（<strong>3.5</strong>）</td>
+</tr>
+</tbody>
+</table>
+<p>已经存在的标定数据（你本人 + 这套硬件）：</p>
+<pre><code>PC端/imu_motor_calibration_right.json      右臂 IMU 标定
+PC端/imu_motor_calibration_left.json       左臂 IMU 标定
+PC端/wireless_imu_roles.json               IMU 硬件编号↔身体部位
+mhandpro/config/right_hand.calib           右手套（V4，含拇指指腹锚点）
+mhandpro/config/left_hand.calib            左手套（V4，含拇指指腹锚点）
+</code></pre>
+<p>⚠️ <strong>标定质量门现在是关的，标坏的会直接覆盖标好的，没有任何拦截。</strong>
+<strong>每次重标之前先备份：</strong></p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/PC端
+cp imu_motor_calibration_left.json  imu_motor_calibration_left.json.bak_$(date +%m%d_%H%M)
+cp imu_motor_calibration_right.json imu_motor_calibration_right.json.bak_$(date +%m%d_%H%M)
+</code></pre>
+<p><strong>完整顺序</strong>（第一次用这套系统，或换了操作员）：</p>
+<pre><code>3.2 IMU 磁校准  →  3.3 手臂标定  →  3.4 手套链路+磁校准+手掌  →  3.5 手套五姿势映射
+</code></pre>
+<h2 id="sec27"><a class="anchor" href="#sec27">#</a>3.2 · IMU 磁力计校准（5 个逐个做）</h2>
+<p>⚠️ <strong>必须在实际使用的位置做</strong> —— 在工位上校准好、拿到机器人旁边用<strong>反而更糟</strong>，
+这是踩过的坑。</p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/固件_统一优化版_1.3.2/多IMU数据展示
+/home/hong/unitree/最新直接能用的代码/PC端/.venv/bin/python multi_imu_dashboard.py
+</code></pre>
+<p>界面里选中一个 IMU，按 <strong><code>C</code></strong> 进向导，四步：</p>
+<ol>
+<li>从元件面朝上开始，连续缓慢滚动设备</li>
+<li>让正反面和四个侧面都经过朝上方向</li>
+<li>缓慢画 8 字，看球面覆盖提示</li>
+<li>出现<strong>绿色</strong>提示后按 <strong><code>X</code></strong> → 拟合并无线写回 IMU</li>
+</ol>
+<p><code>ESC</code> 取消（原参数不变）。<strong>5 个 IMU 逐个做完。</strong></p>
+<h2 id="sec28"><a class="anchor" href="#sec28">#</a>3.3 · 手臂标定（IMU → 关节角）</h2>
+<p>IMU 佩戴：<strong>胸部 ×1、大臂 ×2、小臂 ×2</strong>，绑紧别滑动。</p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/PC端
+.venv/bin/python dual_arm_viz.py --udp-target 127.0.0.1:9527
+</code></pre>
+<blockquote>
+<p>标定期间用 <code>127.0.0.1</code>，没必要连着真机，也省得中途误触发跟随。</p>
+</blockquote>
+<h3 id="sec29"><a class="anchor" href="#sec29">#</a>按哪个键</h3>
+<table>
+<thead>
+<tr>
+<th>键</th>
+<th>标什么</th>
+<th>什么时候用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>Shift+C</code></strong></td>
+<td><strong>只标当前那条臂，7 步</strong></td>
+<td><strong>只戴了一条臂的 IMU 时用这个</strong>（先按 <code>L</code>/<code>R</code> 切到那条臂）</td>
+</tr>
+<tr>
+<td><code>C</code></td>
+<td>双臂连续 14 步（右臂 7 步 → 左臂 7 步）</td>
+<td>5 个 IMU 全戴上时</td>
+</tr>
+<tr>
+<td><code>X</code></td>
+<td><strong>清除全部标定（两条臂一起清）</strong></td>
+<td>慎按</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>C</code> 固定从<strong>右臂</strong>起步。右臂 IMU 不在线时它会说明并<strong>自动改标左臂</strong>，
+不会把你晾在一个永远采不了的步骤上。</p>
+</blockquote>
+<p>每步：摆好姿势 → 按 <strong><code>C</code></strong> 采集 → 等它算完 → 自动进下一步。</p>
+<h3 id="sec30"><a class="anchor" href="#sec30">#</a>每臂 7 步</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>姿态</th>
+<th>要点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>自然下垂、肘伸直</td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td>前平举、肘伸直</td>
+<td>举着会抖，<strong>手肘找个支撑或靠墙</strong>再按 <code>C</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>侧平举、掌心朝下</td>
+<td>最累的一步，同上</td>
+</tr>
+<tr>
+<td>4</td>
+<td>大臂自然下垂，<strong>舒适屈伸肘关节 2 次</strong></td>
+<td>幅度要 <strong>≥25°</strong>，大臂晃动 <strong>≤30°</strong>；<strong>不用夹紧大臂</strong>，夹紧反而会带着大臂晃</td>
+</tr>
+<tr>
+<td>5</td>
+<td>前平举、肘伸直、<strong>掌心朝上</strong></td>
+<td>用<strong>前臂旋转</strong>，不要用手腕代替</td>
+</tr>
+<tr>
+<td>6</td>
+<td>前平举、肘伸直、<strong>掌心朝下</strong></td>
+<td>与第 5 步<strong>小臂高度保持一致</strong>（横向甩手臂不影响）；一致性要 <strong>≤60°</strong></td>
+</tr>
+<tr>
+<td>7</td>
+<td>验证：大臂下垂、肘 90°、小臂向前</td>
+<td>自检步骤，不合格会让你重做</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sec31"><a class="anchor" href="#sec31">#</a>按了 <code>C</code> 却迟迟不开始采集</h3>
+<p>看界面上那行：</p>
+<pre><code>正在检测稳定性 · 姿态离散 6.31° / ≤5.0°
+</code></pre>
+<p>系统是<strong>检测到稳定才开始采</strong>。超了就一直等。<strong>摆好姿势先停两秒再按 <code>C</code>。</strong></p>
+<p>戴外骨骼等负重装备时这一条最难 —— 门槛已经从 2.5° 放宽到 <strong>5.0°（起采）/
+8.0°（采完）</strong>，两个数不同是因为后者判的是整段 1.8 秒，前者只判 0.4 秒滑动窗。</p>
+<h3 id="sec32"><a class="anchor" href="#sec32">#</a>一步被打回时看提示原文</h3>
+<p>只有五种可能，各自门槛写死在代码里：</p>
+<table>
+<thead>
+<tr>
+<th>提示</th>
+<th>门槛</th>
+<th>怎么办</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>静态离散度 X° &gt; 8.0°</code></td>
+<td>8°</td>
+<td>站不稳。找支撑，或缩短举着的时间</td>
+</tr>
+<tr>
+<td><code>翻掌一致性 X° &gt; 60°</code></td>
+<td>60°</td>
+<td>两步之间小臂高度变了（手腕一次翘一次垂也算）。<strong>戴手套时读 46~50° 是正常的</strong>，见下</td>
+</tr>
+<tr>
+<td>肘轴不合格</td>
+<td>幅度≥25°、轴离散≤25°、大臂移动≤30°</td>
+<td>第 4 步屈伸幅度不够，或大臂跟着晃</td>
+</tr>
+<tr>
+<td><code>同步样本不足（n帧）</code></td>
+<td>—</td>
+<td>IMU 掉包，查无线</td>
+</tr>
+<tr>
+<td><code>采集中有 IMU 断开</code></td>
+<td>—</td>
+<td>绑带压住天线 / 电量低</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sec33"><a class="anchor" href="#sec33">#</a>翻掌一致性稳定在 46~50°，这是正常的</h3>
+<p>小臂 IMU 的外壳贴在<strong>数据手套腕部的控制器</strong>上，所以它跟<strong>手</strong>刚性相连，不是小臂。
+掌心朝上和朝下时你的腕关节屈伸角本来就不一样，这个差值被读成「小臂指向变了」，
+<strong>1:1 计入这个指标</strong>（横向甩手臂则完全不计入）。姿势再标准也降不下来。</p>
+<p>绑回小臂能让这个数变好看，但小臂皮带吃不满旋前旋后的幅度，反而更糟 —— 所以贴在
+手套控制器上是对的，门槛在 2026-08-11 从 30° 放宽到 <strong>60°</strong>。</p>
+<p>依据（当天 9 次尝试反推）：读数 36~50° 的 6 次，最终解出的<strong>掌心轴彼此一致到平均
+2.6°</strong>，被拦掉的是一个已经很稳的结果；而 72 / 87 / 166° 那三次掌心轴偏离共识
+27~73°，是真的坏。60° 正好把两组分开，两边各留约 10° 余量。</p>
+<blockquote>
+<p><strong>换成 IMU 直接绑小臂时要把 60 调回 30</strong>（<code>dual_arm_viz.py</code> 的
+<code>CALIB_MAX_PALM_CONSISTENCY_DEG</code>）。它补偿的是佩戴方式，不是算法误差。</p>
+</blockquote>
+<h3 id="sec34"><a class="anchor" href="#sec34">#</a>标完看这一行</h3>
+<pre><code>左臂校准完成：静态 8.3°/inf°，验证 42.4°/inf°，可进入真机前验证
+</code></pre>
+<p><strong>质量门当前是关闭的</strong>，所以两个门槛显示 <code>inf</code>，多大的误差都会存盘、都能连真机。
+界面标定格显示：</p>
+<table>
+<thead>
+<tr>
+<th>显示</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>标定通过</strong>（绿）</td>
+<td>静态 ≤30° 且 验证 ≤40°，货真价实的好标定</td>
+</tr>
+<tr>
+<td><strong>已放行(超门槛)</strong>（黄）</td>
+<td>超了上面的参考值，但门关着所以照发。<strong>自己判断能不能用</strong></td>
+</tr>
+<tr>
+<td>等待标定</td>
+<td>还没标，或标定流程进行中</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <strong>别拿 HUD 上那行「映射误差 x.x°」判断标定好坏</strong> —— 那是 IK 映射误差，
+和标定质量是两回事，它显示 0.3° 的同时标定完全可以是超门槛的。</p>
+<p><strong>静态误差 60° 以上基本不是"抖"，是拟合不上</strong> —— 常见成因是 IMU 相对肢段在动
+（绑带在装备上打滑），或装备上有电机/铁件持续干扰磁力计（这种干扰<strong>磁校准消不掉</strong>）。
+把 IMU 挪到裸露的皮肤/衣服上再标一次就能分辨。</p>
+<h2 id="sec35"><a class="anchor" href="#sec35">#</a>3.4 · 手套：链路 + 磁校准 + 手掌标定（双手一起）</h2>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/mhandpro
+./studio.sh
+</code></pre>
+<ol>
+<li>点右上角<strong>「连接数据手套」</strong>，等待 RIGHT / LEFT 两张卡都显示在线。</li>
+<li>点<strong>「20 秒链路检测」</strong>：超过 500 ms 的中断必须为 0。</li>
+<li>换环境或持续 BAD_MAG 时，点<strong>「深度磁校准 75s（全部）」</strong>。</li>
+<li>双手做 P-pose，点<strong>「官方 P-pose（在线全部）」</strong>。姿势说明和进度会在大窗口中显示。</li>
+</ol>
+<p>链路详情会保留在大型诊断面板中，不需要再到小终端里找三行提示。
+两只手套共用同一 USB 接收器，<strong>只能打开一个图形上位机</strong>。</p>
+<p>「20 秒链路检测」有中断就先查手套电量和接收器位置，<strong>别往下走</strong>。</p>
+<blockquote>
+<p><strong>官方 P-pose 和磁校准不分左右手</strong> —— SDK 层这两件事本来就是两只一起采的，
+点一次界面按钮就会完成两只手，两只的结果都会报出来。</p>
+</blockquote>
+<p>⚠️ <strong>深度磁校准完成后必须把手套关机再开机、重连</strong>（磁校准改了融合输出），然后接着
+做 3.5。</p>
+<blockquote>
+<p>启动真机映射时看到 <code>【注意】LEFT 配置把 BAD_MAG 降级为非致命</code>，说明那只手套<strong>正在
+报磁场异常</strong>，回到图形界面点「深度磁校准 75s（全部）」。</p>
+</blockquote>
+<h2 id="sec36"><a class="anchor" href="#sec36">#</a>3.5 · 手套：双手五姿势映射标定</h2>
+<p>这一步把「你的手在做什么」映射成因时的六个通道。
+<strong>换操作员、换手套尺寸、或者觉得手指/拇指跟不对，就重做这一步。</strong></p>
+<p>在图形上位机左侧选<strong>「双手」</strong>，点<strong>「五姿势映射」</strong>。</p>
+<p><strong>双手同时摆同一个姿势</strong>，每个姿势依次采两只手，采完之前都不要动。</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>姿势</th>
+<th>要点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>比赞</strong>（四指弯到抓握深度，拇指笔直朝上竖起）</td>
+<td>四指弯到你<strong>平时遥操会握到</strong>的深度</td>
+</tr>
+<tr>
+<td>2</td>
+<td>四指伸直并展开</td>
+<td>不要弯指，手腕手掌不要转</td>
+</tr>
+<tr>
+<td>3</td>
+<td>只做拇指弯曲</td>
+<td></td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>拇指横贴掌心</strong></td>
+<td>四指伸直并拢，拇指横扫过掌心并<strong>真的贴到掌心上</strong></td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>OK 手势</strong></td>
+<td>拇指指腹<strong>捏住</strong>食指指腹</td>
+</tr>
+</tbody>
+</table>
+<p><strong>第 1 步的握拳深度就是闭合度 1.0 的位置。</strong> 之后所有通道都是这个深度和张开之间
+的线性插值 —— <strong>标得比日常深，用起来就会觉得手指弯得不够。</strong></p>
+<h3 id="sec37"><a class="anchor" href="#sec37">#</a>做完看这一行判断标得好不好</h3>
+<pre><code>[指腹重定向] 横贴掌心位移=xx.x mm  OK 位移=xx.x mm  两手势夹角=xx.x 度
+</code></pre>
+<p><strong>夹角是关键。</strong> 因时自己这两个锚点方向的夹角是 <strong>28.7°</strong>，你的应该在这附近
+（实测右手 33.4°、左手 30.0°，很好）。<strong>明显偏小（&lt; 20°）说明第 4 步拇指没真的
+贴到掌心，重做。</strong></p>
+<p>全部合格后自动覆盖保存到 <code>config/right_hand.calib</code> 和 <code>left_hand.calib</code>，
+下次启动自动加载，<strong>不用手动 <code>save</code></strong>。</p>
+<blockquote>
+<p><strong>为什么界面一定要选「双手」再做五姿势映射</strong>：分开标最典型的后果是一只手
+的展开轴采到了、另一只没采到，用起来就是「同样的动作两只手感觉不一样」。
+「双手」流程走同一份实现，一次把两只手一起过一遍，两只不会漂开。</p>
+<p>标定文件格式是 <code>MHANDPRO_CALIBRATION_V4</code>。老的 V2/V3 仍然能读，但<strong>不会启用
+拇指指腹重定向</strong> —— V3 的三个点是按老的「张开/纯弯曲/纯对掌」采的，按 V4 的
+手势语义去读不会报错，<strong>只会悄悄错</strong>，而这份数据是要驱动真手的。在界面重做一遍
+「双手 → 五姿势映射」就升级了。</p>
+</blockquote>
+<h2 id="secgloveui"><a class="anchor" href="#secgloveui">#</a>3.6 · 数据手套图形上位机（推荐）</h2>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/mhandpro
+./studio.sh
+</code></pre>
+<table>
+<thead><tr><th>区域/按钮</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td>连接/断开数据手套</td><td>启动或安全退出唯一的 mHandPro SDK 诊断进程</td></tr>
+<tr><td>RIGHT / LEFT 卡片</td><td>分开显示在线、帧率、数据年龄、电量、映射和手势稳定度</td></tr>
+<tr><td>手套传感</td><td>所选手套的快照在 500 ms 内持续到达</td></tr>
+<tr><td>映射就绪</td><td>所选手已加载/完成六维映射标定</td></tr>
+<tr><td>TELEOP 输出</td><td>上位机正在向右 9103 / 左 9104 发送闭合度</td></tr>
+<tr><td>机器人接收</td><td>已收到机器人端返回的灵巧手反馈包</td></tr>
+<tr><td>真手跟随</td><td>表示真手反馈在线、未超时且无 FAULT；<strong>它是状态指示，不是按钮，也不是角度误差判定</strong></td></tr>
+</tbody>
+</table>
+<p>要映射真机，先启动终端 B 的 <code>dual_arm_viz.py --hand --hand-left</code>，再在左侧选
+<strong>「双手」</strong>，点<strong>「启动双手真机映射（100%）」</strong>，阅读大窗口的安全说明后点
+<strong>「ARM 并启动」</strong>。界面会自动选择右手/ 左手的现场配置，不需要手工输入文件路径。</p>
+<p>底层发送保持 30 Hz，配置使用 One Euro 自适应滤波、<code>0.08/帧</code> 上游限步和
+0–100% 闭合度。运行中用红色<strong> STOP</strong> 停止并张手。</p>
+<blockquote>
+<p><strong>数据手套震动反馈已完全停用。</strong>界面不再显示震动等级，不连接 9201/9202，
+不向 mHandPro SDK 发送 L1–L8。机器人命令中的 <code>--hand-haptic</code> 可继续供力反馈手套使用，
+两者不再相互耦合。</p>
+</blockquote>
+<hr />
+<h1 id="sec38"><a class="anchor" href="#sec38">#</a>4 · 只跑手（不碰电机，不用吊装，两种模式通用）</h1>
+<p><code>--hand-only</code> 完全不初始化 DDS，<strong>运控服务起没起、FSM 是多少都无所谓</strong>，
+所以这一章只有一行终端 A 命令。</p>
+<h2 id="sec39"><a class="anchor" href="#sec39">#</a>4.1 · 单独右手</h2>
+<p><strong>终端 A（板载机）</strong></p>
+<pre><code class="language-bash">cd ~/zh &amp;&amp; python3 hand_check.py --side right
+~/zh/start.sh --hand both --hand-haptic --hand-only --hand-touch-hz 10
+</code></pre>
+<p><strong>终端 B（PC）</strong></p>
+<pre><code class="language-bash">pkill -f &quot;[d]ual_arm_viz&quot;
+/home/hong/unitree/最新直接能用的代码/PC端/.venv/bin/python \
+    /home/hong/unitree/最新直接能用的代码/PC端/dual_arm_viz.py \
+    --hand \
+    --udp-target 192.168.3.78:9527
+</code></pre>
+<p><strong>数据手套图形上位机（PC）</strong></p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/mhandpro
+./studio.sh
+</code></pre>
+<p>点<strong>「连接数据手套」</strong> → 选<strong>「右手」</strong> → 点<strong>「启动右手真机映射（100%）」</strong>
+→ 在大窗口点<strong>「ARM 并启动」</strong>。</p>
+<p>终端 A 状态行出现 <code>right手:xx%</code> 跟着变就通了。<strong>手臂一动不动。</strong></p>
+<hr />
+<h2 id="sec40"><a class="anchor" href="#sec40">#</a>4.2 · 单独左手</h2>
+<p><strong>终端 A（板载机）</strong></p>
+<pre><code class="language-bash">cd ~/zh &amp;&amp; python3 hand_check.py --side left
+~/zh/start.sh --hand both --hand-haptic --hand-only --hand-touch-hz 10
+</code></pre>
+<p><strong>终端 B（PC）</strong> —— 注意是 <code>--hand-left</code>，<strong>不是</strong> <code>--hand</code></p>
+<pre><code class="language-bash">pkill -f &quot;[d]ual_arm_viz&quot;
+/home/hong/unitree/最新直接能用的代码/PC端/.venv/bin/python \
+    /home/hong/unitree/最新直接能用的代码/PC端/dual_arm_viz.py \
+    --hand-left \
+    --udp-target 192.168.3.78:9527
+</code></pre>
+<p><strong>数据手套图形上位机（PC）</strong></p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/mhandpro
+./studio.sh
+</code></pre>
+<p>点<strong>「连接数据手套」</strong> → 选<strong>「左手」</strong> → 点<strong>「启动左手真机映射（100%）」</strong>
+→ 在大窗口点<strong>「ARM 并启动」</strong>。</p>
+<hr />
+<h2 id="sec41"><a class="anchor" href="#sec41">#</a>4.3 · 双手（手臂不动）</h2>
+<p><strong>终端 A（板载机）</strong></p>
+<pre><code class="language-bash">cd ~/zh &amp;&amp; python3 hand_check.py --side right
+cd ~/zh &amp;&amp; python3 hand_check.py --side left
+~/zh/start.sh --hand both --hand-haptic --hand-only --hand-touch-hz 10
+</code></pre>
+<p><strong>终端 B（PC）</strong> —— 两个开关一起给</p>
+<pre><code class="language-bash">pkill -f &quot;[d]ual_arm_viz&quot;
+/home/hong/unitree/最新直接能用的代码/PC端/.venv/bin/python \
+    /home/hong/unitree/最新直接能用的代码/PC端/dual_arm_viz.py \
+    --hand --hand-left \
+    --udp-target 192.168.3.78:9527
+</code></pre>
+<p><strong>数据手套图形上位机（PC）</strong> —— <strong>一个窗口驱动两只手</strong></p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/mhandpro
+./studio.sh
+</code></pre>
+<p>点<strong>「连接数据手套」</strong>，必须看到 RIGHT / LEFT 两张卡都在线；选<strong>「双手」</strong>，
+点<strong>「启动双手真机映射（100%）」</strong> → 在大窗口点<strong>「ARM 并启动」</strong>。</p>
+<blockquote>
+<p><strong>不能同时打开两个数据手套上位机或任何第二个手套进程。</strong>
+两只手套共用一个 USB 接收器和同一个 <code>/dev/ttyUSB0</code>，双手模式由这一个图形窗口完成。</p>
+</blockquote>
+<hr />
+<h1 id="sec42"><a class="anchor" href="#sec42">#</a>5 · 只跑手臂（手一动不动）</h1>
+<h2 id="sec43"><a class="anchor" href="#sec43">#</a>5.1 · 单独右臂</h2>
+<blockquote>
+<p>要戴 <strong>胸部 + 右大臂 + 右小臂</strong> 三个 IMU，界面里三个都得 ONLINE。</p>
+</blockquote>
+<p><strong>终端 A（板载机）</strong> —— 按 <strong>1.2</strong> 挑一行</p>
+<pre><code class="language-bash"># 正常模式（FSM 200，机器人站地上）
+~/zh/start.sh --hand both --hand-haptic --hand-touch-hz 10
+</code></pre>
+<pre><code class="language-bash"># 调试模式（code=3102，机器人必须吊装）— 连问两次，都答 yes
+~/zh/start.sh --hand both --hand-haptic --mode lowcmd --hand-touch-hz 10
+</code></pre>
+<p><strong>终端 B（PC）</strong></p>
+<pre><code class="language-bash">pkill -f &quot;[d]ual_arm_viz&quot;
+/home/hong/unitree/最新直接能用的代码/PC端/.venv/bin/python \
+    /home/hong/unitree/最新直接能用的代码/PC端/dual_arm_viz.py \
+    --udp-target 192.168.3.78:9527
+</code></pre>
+<p><strong>按键</strong>：<code>R</code> → 确认人离开摆动范围 → <code>空格</code></p>
+<hr />
+<h2 id="sec44"><a class="anchor" href="#sec44">#</a>5.2 · 单独左臂</h2>
+<p>命令与 <strong>5.1</strong> <strong>完全一样</strong>，只有按键不同。</p>
+<blockquote>
+<p>要戴 <strong>胸部 + 左大臂 + 左小臂</strong>。</p>
+</blockquote>
+<p><strong>按键</strong>：<code>L</code> → <code>空格</code></p>
+<hr />
+<h2 id="sec45"><a class="anchor" href="#sec45">#</a>5.3 · 双臂</h2>
+<p>命令与 <strong>5.1</strong> <strong>完全一样</strong>。<strong>5 个 IMU 全要戴上。</strong></p>
+<p><strong>按键</strong>：确认人离开<strong>两条</strong>手臂的摆动范围 → <code>B</code></p>
+<blockquote>
+<p><code>B</code> 是「两条都没跟随就尽量全开，否则全部暂停」。只有一条臂满足条件时它会
+开那一条，并写明另一条被挡的原因。</p>
+</blockquote>
+<hr />
+<h1 id="sec46"><a class="anchor" href="#sec46">#</a>6 · 手臂 + 手</h1>
+<p><strong>手先起、手臂后起</strong> —— 手是独立线程独立降级，先确认手这条链没问题；
+等手臂一接管，再排查手就要冒着手臂在动的风险。</p>
+<h2 id="sec47"><a class="anchor" href="#sec47">#</a>6.1 · 右臂 + 右手</h2>
+<p><strong>终端 A（板载机）</strong> —— 没有 <code>--hand-only</code>，手臂要能动</p>
+<pre><code class="language-bash">cd ~/zh &amp;&amp; python3 hand_check.py --side right
+</code></pre>
+<pre><code class="language-bash"># 正常模式
+~/zh/start.sh --hand both --hand-haptic --hand-touch-hz 10
+</code></pre>
+<pre><code class="language-bash"># 调试模式（吊装）— 连问两次，都答 yes
+~/zh/start.sh --hand both --hand-haptic --mode lowcmd --hand-touch-hz 10
+</code></pre>
+<p><strong>终端 B（PC）</strong></p>
+<pre><code class="language-bash">pkill -f &quot;[d]ual_arm_viz&quot;
+/home/hong/unitree/最新直接能用的代码/PC端/.venv/bin/python \
+    /home/hong/unitree/最新直接能用的代码/PC端/dual_arm_viz.py \
+    --hand \
+    --udp-target 192.168.3.78:9527
+</code></pre>
+<p><strong>数据手套图形上位机（PC）</strong></p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/mhandpro
+./studio.sh
+</code></pre>
+<p>连接手套 → 选<strong>「右手」</strong> → 点<strong>「启动右手真机映射（100%）」</strong>
+→ 点<strong>「ARM 并启动」</strong>。</p>
+<p><strong>按键</strong>（手指跟随正常之后）：<code>R</code> → <code>空格</code></p>
+<hr />
+<h2 id="sec48"><a class="anchor" href="#sec48">#</a>6.2 · 左臂 + 左手</h2>
+<p><strong>终端 A（板载机）</strong></p>
+<pre><code class="language-bash">cd ~/zh &amp;&amp; python3 hand_check.py --side left
+</code></pre>
+<pre><code class="language-bash"># 正常模式
+~/zh/start.sh --hand both --hand-haptic --hand-touch-hz 10
+</code></pre>
+<pre><code class="language-bash"># 调试模式（吊装）— 连问两次，都答 yes
+~/zh/start.sh --hand both --hand-haptic --mode lowcmd --hand-touch-hz 10
+</code></pre>
+<p><strong>终端 B（PC）</strong></p>
+<pre><code class="language-bash">pkill -f &quot;[d]ual_arm_viz&quot;
+/home/hong/unitree/最新直接能用的代码/PC端/.venv/bin/python \
+    /home/hong/unitree/最新直接能用的代码/PC端/dual_arm_viz.py \
+    --hand-left \
+    --udp-target 192.168.3.78:9527
+</code></pre>
+<p><strong>数据手套图形上位机（PC）</strong></p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/mhandpro
+./studio.sh
+</code></pre>
+<p>连接手套 → 选<strong>「左手」</strong> → 点<strong>「启动左手真机映射（100%）」</strong>
+→ 点<strong>「ARM 并启动」</strong>。</p>
+<p><strong>按键</strong>：<code>L</code> → <code>空格</code></p>
+<hr />
+<h2 id="sec49"><a class="anchor" href="#sec49">#</a>6.3 · 双臂 + 双手（全功能）</h2>
+<p><strong>终端 A（板载机）</strong></p>
+<pre><code class="language-bash">cd ~/zh &amp;&amp; python3 hand_check.py --side right
+cd ~/zh &amp;&amp; python3 hand_check.py --side left
+</code></pre>
+<pre><code class="language-bash"># 正常模式
+~/zh/start.sh --hand both --hand-haptic --hand-touch-hz 10
+</code></pre>
+<pre><code class="language-bash"># 调试模式（吊装）— 连问两次，都答 yes
+~/zh/start.sh --hand both --hand-haptic --mode lowcmd --hand-touch-hz 10
+</code></pre>
+<p><strong>终端 B（PC）</strong></p>
+<pre><code class="language-bash">pkill -f &quot;[d]ual_arm_viz&quot;
+/home/hong/unitree/最新直接能用的代码/PC端/.venv/bin/python \
+    /home/hong/unitree/最新直接能用的代码/PC端/dual_arm_viz.py \
+    --hand --hand-left \
+    --udp-target 192.168.3.78:9527
+</code></pre>
+<p><strong>数据手套图形上位机（PC）</strong></p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/mhandpro
+./studio.sh
+</code></pre>
+<p>连接手套，确认 RIGHT / LEFT 均在线 → 选<strong>「双手」</strong> →
+点<strong>「启动双手真机映射（100%）」</strong> → 点<strong>「ARM 并启动」</strong>。</p>
+<p><strong>按键</strong>：<code>B</code></p>
+<hr />
+<h1 id="sec50"><a class="anchor" href="#sec50">#</a>7 · 叠加项</h1>
+<h2 id="sec51"><a class="anchor" href="#sec51">#</a>7.1 · 手 + 手臂 + 腰（全套完整指令）</h2>
+<p>腰用的就是<strong>胸部那个 IMU</strong>，不需要额外传感器。
+<strong><code>--waist</code> 两端都要加，少一端就没用</strong>（机器人端不加，上位机发了也白发；上位机
+不加，机器人端状态行会显示 <code>腰:--(发送端不支持)</code>）。</p>
+<p>下面给两套完整命令，直接整段复制。</p>
+<h3 id="sec52"><a class="anchor" href="#sec52">#</a>7.1.1 · 双臂 + 双手 + 腰（= 6.3 + 腰）</h3>
+<p><strong>终端 A（板载机）</strong></p>
+<pre><code class="language-bash">cd ~/zh &amp;&amp; python3 hand_check.py --side right
+cd ~/zh &amp;&amp; python3 hand_check.py --side left
+</code></pre>
+<pre><code class="language-bash"># 正常模式（FSM 200，机器人站地上）
+~/zh/start.sh --hand both --hand-haptic --waist --hand-touch-hz 10
+</code></pre>
+<pre><code class="language-bash"># 调试模式（吊装）— 连问两次，都答 yes
+~/zh/start.sh --hand both --hand-haptic --waist --mode lowcmd --hand-touch-hz 10
+</code></pre>
+<p><strong>终端 B（PC）</strong></p>
+<pre><code class="language-bash">pkill -f &quot;[d]ual_arm_viz&quot;
+/home/hong/unitree/最新直接能用的代码/PC端/.venv/bin/python \
+    /home/hong/unitree/最新直接能用的代码/PC端/dual_arm_viz.py \
+    --hand --hand-left --waist \
+    --udp-target 192.168.3.78:9527
+</code></pre>
+<p><strong>数据手套图形上位机（PC）</strong></p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/mhandpro
+./studio.sh
+</code></pre>
+<p>连接手套，确认 RIGHT / LEFT 均在线 → 选<strong>「双手」</strong> →
+点<strong>「启动双手真机映射（100%）」</strong> → 点<strong>「ARM 并启动」</strong>。</p>
+<p><strong>按键</strong>：<code>B</code> → 手臂跟随后 → <code>W</code> → <code>Shift+W</code></p>
+<h3 id="sec53"><a class="anchor" href="#sec53">#</a>7.1.2 · 左臂 + 左手 + 腰（= 6.2 + 腰）</h3>
+<p><strong>终端 A（板载机）</strong></p>
+<pre><code class="language-bash">cd ~/zh &amp;&amp; python3 hand_check.py --side left
+</code></pre>
+<pre><code class="language-bash"># 正常模式
+~/zh/start.sh --hand both --hand-haptic --waist --hand-touch-hz 10
+</code></pre>
+<pre><code class="language-bash"># 调试模式（吊装）— 连问两次，都答 yes
+~/zh/start.sh --hand both --hand-haptic --waist --mode lowcmd --hand-touch-hz 10
+</code></pre>
+<p><strong>终端 B（PC）</strong></p>
+<pre><code class="language-bash">pkill -f &quot;[d]ual_arm_viz&quot;
+/home/hong/unitree/最新直接能用的代码/PC端/.venv/bin/python \
+    /home/hong/unitree/最新直接能用的代码/PC端/dual_arm_viz.py \
+    --hand-left --waist \
+    --udp-target 192.168.3.78:9527
+</code></pre>
+<p><strong>数据手套图形上位机（PC）</strong></p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/mhandpro
+./studio.sh
+</code></pre>
+<p>连接手套 → 选<strong>「左手」</strong> → 点<strong>「启动左手真机映射（100%）」</strong>
+→ 点<strong>「ARM 并启动」</strong>。</p>
+<p><strong>按键</strong>：<code>L</code> → <code>空格</code> → <code>W</code> → <code>Shift+W</code></p>
+<blockquote>
+<p>右臂+右手+腰：把 B 的 <code>--hand-left</code> 换成 <code>--hand</code>，数据手套界面选「右手」并点
+「启动右手真机映射（100%）」，按键 <code>L</code> 换成 <code>R</code>。终端 A 一个字不用改。</p>
+</blockquote>
+<h3 id="sec54"><a class="anchor" href="#sec54">#</a>腰的两步操作（必须在手臂已经跟随之后）</h3>
+<ol>
+<li><strong>站直、面朝正前方、身体不要扭</strong> → 按 <strong><code>W</code></strong> 采腰部零位</li>
+<li>按 <strong><code>Shift+W</code></strong> → 日志「腰部跟随: 开启」，然后<strong>小幅度</strong>扭腰，
+   终端 A 的 <code>腰:</code> 要跟着变</li>
+</ol>
+<p>⚠️ <strong>第一次从 ±15° 以内开始，旁边留人扶。</strong> 扭腰改变上半身重心，对运控服务是
+真实扰动。</p>
+<h3 id="sec55"><a class="anchor" href="#sec55">#</a>腰的状态行怎么读（终端 A）</h3>
+<table>
+<thead>
+<tr>
+<th>显示</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>腰:关(--waist)</code></td>
+<td>门控没开，腰保持回中</td>
+</tr>
+<tr>
+<td><code>腰:+3°(回中)</code></td>
+<td>门控开了，但本帧没收到有效尾块 / 手臂还没跟随</td>
+</tr>
+<tr>
+<td><code>腰:--(发送端不支持)</code></td>
+<td>上位机没加 <code>--waist</code></td>
+</tr>
+<tr>
+<td><code>腰:+12°</code></td>
+<td><strong>正在跟随</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="sec56"><a class="anchor" href="#sec56">#</a>跟随太迟钝</h3>
+<p>用 <strong><code>]</code></strong> 加增益、<strong><code>[</code></strong> 减增益（每次 0.1）。</p>
+<blockquote>
+<p>实测发送端能交付原始 IMU 偏转的 <strong>0.944</strong>，夹位只在 0.4% 的帧触发、限速 0.17% ——
+瓶颈不在它们身上，<strong>调增益是对的，不用去改限位</strong>。</p>
+</blockquote>
+<p><strong>只有 <code>waist_yaw</code>（左右扭）会动。</strong> 前后倾和左右倾永远送 0 —— 它们限位只有
+±0.52 rad，且直接改变上半身重心，对运控是比 yaw 强得多的扰动。接收端还会独立
+把 yaw 夹到 ±1.0 rad、限速 1.5 rad/s，不管上位机夹过没有。</p>
+<hr />
+<h2 id="sec57"><a class="anchor" href="#sec57">#</a>7.2 · VR 眼镜 / 显示（8443 操作台）</h2>
+<p><strong>Pico4U 和 PC 用同一个地址，只要 8443 这一个口。</strong>
+左半屏头部相机实时画面，右半屏跟着真实关节角动的 G1 三维模型，两侧各一张灵巧手
+触觉图。</p>
+<blockquote>
+<p>8012 那条 WebXR 真沉浸的路这里不写，只有要真沉浸时才用，见
+<code>G1_Pico4U_60001_8012_启动说明.md</code>。</p>
+</blockquote>
+<h3 id="sec58"><a class="anchor" href="#sec58">#</a>能不能和遥操同时开？能</h3>
+<p>操作台的两个桥<strong>都是只读的</strong>：</p>
+<ul>
+<li><code>joint_state_bridge.py</code> 只订阅 <code>rt/lowstate</code>，<strong>从不发布 DDS、不碰电机</strong></li>
+<li><code>hand_touch_bridge.py</code> 只发 Modbus <strong>功能码 0x03</strong>，写寄存器的帧构造函数根本
+  不导入，六个指令寄存器的地址在那个文件里一次都不出现</li>
+</ul>
+<p>因时手实测能同时接<strong>两条</strong> Modbus TCP 连接，所以 <code>hand_driver</code>（遥操）+
+触觉桥各占一条，正好够，实测互不干扰。</p>
+<h3 id="sec59"><a class="anchor" href="#sec59">#</a>第一步：在机器人上起（终端 A 或另开一个 SSH）</h3>
+<pre><code class="language-bash">ssh unitree@192.168.3.78
+bash /home/unitree/start_ops.sh
+</code></pre>
+<p>看到这几行就算成功：</p>
+<pre><code class="language-text">=== 端口 ===
+LISTEN  0  128   0.0.0.0:60001
+LISTEN  0  100   0.0.0.0:55555
+LISTEN  0  128   0.0.0.0:8443
+
+打开：https://192.168.3.78:8443
+</code></pre>
+<p><strong>服务在后台跑，SSH 可以直接断开。</strong> 机器人重启后要重新执行一次（没做开机自启）。</p>
+<p>另外两个用法：</p>
+<pre><code class="language-bash">bash /home/unitree/start_ops.sh --demo   # 正弦摆臂假数据，不连 DDS、不碰电机
+bash /home/unitree/start_ops.sh --stop   # 全部停止
+</code></pre>
+<blockquote>
+<p><strong>第一次先跑 <code>--demo</code></strong> —— 它能把「渲染链路通不通」和「控制链路通不通」分开。
+模型双臂正弦摆动就说明 URDF、mesh、UDP、页面这一整条都是好的。</p>
+</blockquote>
+<p>⚠️ <strong><code>pkill</code> 全都写在 <code>start_ops.sh</code> 内部，不要挪到 SSH 命令行上敲</strong> ——
+<code>pkill -f</code> 会匹配到你自己的命令行，SSH 会话会被自己杀掉，现象是「命令没有任何
+输出就断开」。非要临时重启单个进程，用 <code>pkill -f "[h]and_touch_bridge"</code> 这种
+字符类写法绕开自匹配。</p>
+<h3 id="sec60"><a class="anchor" href="#sec60">#</a>第二步：在 Pico4U 或 PC 上打开</h3>
+<pre><code class="language-text">https://192.168.3.78:8443
+</code></pre>
+<p>三个必须注意的点：</p>
+<ul>
+<li><strong>一定要 <code>https://</code></strong>。写成 <code>http://</code> 会得到空响应，看着像服务没起来</li>
+<li><strong>地址栏的自动补全会把 <code>https://</code> 吃掉</strong> —— 用无痕标签页最保险，或者输完回车前
+  扫一眼开头还在不在</li>
+<li><strong>首次访问会弹自签证书警告</strong>，点「高级」→「继续前往」。Pico 上同样要过这一关</li>
+</ul>
+<p><strong>Pico 必须和 G1 在同一个 <code>192.168.3.x</code> SSID 下</strong>，路由器不能开 AP 隔离。
+<strong>PC 上的代理软件（Mihomo / Clash）会劫持对 <code>192.168.3.78</code> 的访问</strong> —— 把
+<code>192.168.3.0/24</code> 加进直连规则，或临时 <code>unset http_proxy https_proxy all_proxy</code>。</p>
+<h3 id="sec61"><a class="anchor" href="#sec61">#</a>第三步：界面上两个按钮（右上角）</h3>
+<table>
+<thead>
+<tr>
+<th>按钮</th>
+<th>什么时候点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>◐ LITE</code></strong></td>
+<td><strong>Pico 上进去先看闪不闪，闪就点它。</strong> 头显 GPU 扛不住毛玻璃+透明画布+高像素比，全屏后会一黑一黑地闪。选择存在浏览器里，下次自动记得</td>
+</tr>
+<tr>
+<td><strong><code>⛶ 全屏</code></strong></td>
+<td>Pico 上没键盘只能点它；PC 上 F11 或按 <code>F</code> 也行</td>
+</tr>
+</tbody>
+</table>
+<p>按钮在<strong>右上角</strong>不是随意的：Pico 可视区域比标称分辨率小一圈，<strong>页面底部那条最容易
+被裁掉</strong>。</p>
+<h3 id="sec62"><a class="anchor" href="#sec62">#</a>URL 参数（改完刷新即生效）</h3>
+<pre><code class="language-text">https://192.168.3.78:8443/?model=arms&amp;touch=0
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+<th>默认</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>model</code></td>
+<td><code>hand</code> 全身带灵巧手 / <code>full</code> 全身 / <code>arms</code> 上半身（<strong>最轻，头显上最流畅</strong>）</td>
+<td><code>hand</code></td>
+</tr>
+<tr>
+<td><code>touch</code></td>
+<td><code>0</code> 隐藏两侧触觉图</td>
+<td>开</td>
+</tr>
+<tr>
+<td><code>lite</code></td>
+<td><code>1</code> 强制精简，<code>0</code> 强制关闭</td>
+<td>头显自动开</td>
+</tr>
+<tr>
+<td><code>amb</code> / <code>key</code> / <code>rim</code></td>
+<td>环境光 / 主光 / 边缘光强度</td>
+<td>0.45 / 0.75 / 2.2</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sec63"><a class="anchor" href="#sec63">#</a>触觉图怎么读</h3>
+<p>每只手 <strong>1062 个 taxel，分 17 块</strong>（四指各 3 块 + 拇指 4 块 + 掌心 1 块）。</p>
+<table>
+<thead>
+<tr>
+<th>显示</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>分区填色</td>
+<td>该块峰值压力。青（轻）→ 琥珀（中）→ 红（重）</td>
+</tr>
+<tr>
+<td>分区不填色</td>
+<td>该块没接触（低于阈值 12，空载噪声在 ±6 内）</td>
+</tr>
+<tr>
+<td><strong>整只手变灰</strong></td>
+<td><strong>没有数据</strong>，下面写原因：<code>未接入</code> / <code>数据陈旧</code> / <code>桥未运行</code></td>
+</tr>
+<tr>
+<td>手图下方六根竖条</td>
+<td><code>FORCE_ACT</code> 六通道实际抓握力</td>
+</tr>
+<tr>
+<td>标题旁 <code>FS nnn</code></td>
+<td><strong>当前自动量程</strong>。满量程没在硬件上标定过，所以必须显示出来</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>点任一分区</strong> → 浮出该块的原生网格热力图，再点收起</li>
+<li><strong>双击 <code>L HAND</code> / <code>R HAND</code> 标题</strong> → 重新取空载基线。<strong>取基线时手必须完全没有
+  接触</strong>，否则会把接触烙进基线，那一块之后就永远显示「无接触」</li>
+</ul>
+<blockquote>
+<p><strong>灰色 ≠ 没压力。</strong> 断链一律变灰并写明原因，绝不画成全零 —— 和 <code>hand_driver.py</code>
+里「缺数据一律张开、绝不写 0」是同一条规矩。</p>
+</blockquote>
+<h3 id="sec64"><a class="anchor" href="#sec64">#</a>出问题按这个顺序查</h3>
+<ol>
+<li><strong>顶栏构建号 <code>BUILD MMDD-HHMM</code></strong> —— 先确认不是缓存里的旧页面</li>
+<li><strong>左侧没画面</strong> —— 看右下角 <code>STATE</code>。<code>FAILED</code> 就去 PC 的 Chrome 关掉
+   <code>chrome://flags/#enable-webrtc-hide-local-ips-with-mdns</code>（改 Disabled 后重启浏览器）</li>
+<li><strong>右侧没模型</strong> —— 看右上角 <code>MESH n/36</code> 加载到几个，右下角 <code>ROBOT</code> 是不是 <code>NaN</code></li>
+<li><strong>顶栏 <code>LINK 无数据</code></strong> —— 关节桥没起来或 lowstate 没数据，<code>tail /tmp/bridge.log</code></li>
+</ol>
+<p>单独验触觉链路：</p>
+<pre><code class="language-bash">python3 /home/unitree/hand_touch_bridge.py --probe            # 打一次全量并退出
+python3 /home/unitree/hand_touch_bridge.py --demo --port 9533 # 不连手，假数据验渲染
+</code></pre>
+<blockquote>
+<p>后台进程的 <code>print</code> 是<strong>块缓冲</strong>的，<code>/tmp/*.log</code> 一开始是空的<strong>不代表进程没起来</strong>。
+判断进程活没活看端口（<code>ss -lun</code>）和 <code>pgrep</code>，别看日志。</p>
+</blockquote>
+<p>三个日志都在 <code>/tmp</code>：<code>teleimager.log</code>、<code>ops_server.log</code>、<code>bridge.log</code>。</p>
+<hr />
+<h2 id="secvr0"><a class="anchor" href="#secvr0">#</a>7.3 · VR 沉浸 + 目标描边（8444 WebXR）</h2>
+<p><strong>和 8443 操作台是两条路，不要混。</strong> 8443 是 2D 页面（左画面右模型＋触觉图）；
+8444 这条是<strong>戴上 Pico 真沉浸</strong>：画面钉在你面前，<strong>头往哪转准星就往哪走</strong>，
+准星指着的物体会被<strong>红边描出来</strong>，同时报左右手到它的距离。</p>
+<blockquote>
+<p><strong>这个页面一行控制指令都不发。</strong> 手臂仍归 IMU、手指仍归数据手套。
+它只显示。所以它和遥操可以同时开。</p>
+</blockquote>
+<h3 id="secvr1"><a class="anchor" href="#secvr1">#</a>第一步：在机器人上起（一条命令起全套）</h3>
+<pre><code class="language-bash">ssh unitree@192.168.3.78
+bash ~/ros2_手物距离/src/g1_hand_object_range/scripts/start_webxr.sh
+</code></pre>
+<p>看到这几行就算成功：</p>
+<pre><code class="language-text">=== 1/3 ROS2 链（只开深度，红外让给 teleimager）
+=== 2/3 teleimager 单目彩色 -&gt; 60001
+  60001 已就绪（rgb）
+=== 2.5/3 图像分割（MobileSAM）
+  已启动，日志 /tmp/sam_seg.log
+  [seg] engine 已加载（3.0s）
+=== 3/3 WebXR 页面 + WebSocket
+0.0.0.0:8444
+0.0.0.0:8765
+</code></pre>
+<p><strong>服务在后台跑，SSH 可以直接断开。</strong> 机器人重启后要重新执行一次。</p>
+<h3 id="secvr2"><a class="anchor" href="#secvr2">#</a>停止</h3>
+<pre><code class="language-bash">bash ~/ros2_手物距离/src/g1_hand_object_range/scripts/start_webxr.sh --stop
+</code></pre>
+<p>它会停掉相机、分割、页面这三段。<strong>关节角桥不停</strong> —— 它是只读的，8443 操作台也在用。</p>
+<p>⚠️ <strong><code>pkill</code> 全都写在脚本内部，不要挪到 SSH 命令行上敲</strong>：<code>pkill -f</code>
+会匹配到你自己的命令行，SSH 会话被自己杀掉，现象是「命令没输出就断开」。</p>
+<h3 id="secvr3"><a class="anchor" href="#secvr3">#</a>第二步：在 Pico 上打开</h3>
+<pre><code class="language-text">https://192.168.3.78:8444/
+</code></pre>
+<ul>
+<li><strong>必须 <code>https://</code></strong>。WebXR 只在安全上下文里可用，写成 <code>http://</code> 的话
+  <code>navigator.xr</code> 直接不存在，表现是「ENTER VR 按钮是灰的」</li>
+<li>自签证书警告点「高级 → 继续前往」</li>
+<li>页面上点 <strong>ENTER VR</strong> 进沉浸</li>
+</ul>
+<h3 id="secvr4"><a class="anchor" href="#secvr4">#</a>怎么用：盯住 0.9 秒就锁定</h3>
+<p>准星（视野正中那个十字）的颜色就是状态：</p>
+<table>
+<thead>
+<tr><th>准星颜色</th><th>状态</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td>灰</td><td>SEARCHING</td><td>没找到目标，把准星移到物体上</td></tr>
+<tr><td><strong>黄</strong></td><td>选中中 <em>n</em>%</td><td>正在数 0.9 秒，同时物体上出现<strong>细白边</strong></td></tr>
+<tr><td><strong>绿</strong></td><td>TARGET LOCKED</td><td>锁定，物体上变成<strong>粗红边</strong>，下方出现左右手距离</td></tr>
+<tr><td>橙</td><td>切换目标 <em>n</em>%</td><td>准星移到了别的物体上，数 1.35 秒才切过去</td></tr>
+<tr><td>黄</td><td>暂时看不到</td><td>目标被挡了一下，报的还是最后一次好读数，撑 1 秒</td></tr>
+<tr><td>红</td><td>目标丢了</td><td>撑不住了，回到 SEARCHING</td></tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>换目标故意比首次锁定更难</strong>（1.35s vs 0.9s）：获得锁要容易、丢掉锁要难，
+否则准星扫过别的东西就被抢走。</p>
+</blockquote>
+<p><strong>锁的是三维点不是像素</strong>，所以腰一转、身子一晃，锁不会跟丢。手柄
+<strong>握持键</strong>可以手动解锁。</p>
+<h3 id="secvr5"><a class="anchor" href="#secvr5">#</a>红边是怎么来的：准星指哪就分割哪</h3>
+<p>准星那个像素直接喂给 <strong>MobileSAM</strong>，它返回那一点<strong>所属物体</strong>的
+mask，取轮廓下发。<strong>不做目标检测、不认类别</strong> —— 桌上的电源盒、接线端子、
+胶带、急停按钮，COCO 那 80 类里一个都没有，走 YOLO 是描不出来的。</p>
+<table>
+<thead>
+<tr><th>阶段</th><th>板载实测</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>编码器（整帧）</td><td>99.7 ms</td><td>按 5Hz 跑，物体不会跑</td></tr>
+<tr><td>解码器（一个准星点）</td><td><strong>9.4 ms</strong></td><td><strong>准星一动只重跑这个</strong>，不重编码整帧</td></tr>
+<tr><td>轮廓提取</td><td>1.0 ms</td><td></td></tr>
+</tbody>
+</table>
+<blockquote>
+<p>吃的是 <strong>GPU</strong>，而视频编码走 CPU 上的 VP8，<strong>两者不抢</strong>。
+分割挂了也只是没有红边，<strong>画面和距离一点不受影响</strong>。</p>
+</blockquote>
+<p><strong>准星落在空桌面上时描出来的就是那片桌面</strong> —— 这是对的，那里本来就没有物体。
+要描物体就把准星压到物体上。</p>
+<h3 id="secvr6"><a class="anchor" href="#secvr6">#</a>可选开关</h3>
+<pre><code class="language-bash"># 关掉图像分割，红边退回深度区域生长（不占 GPU，但描不出平躺的薄物体）
+G1_WEBXR_SEG=0 bash ~/ros2_手物距离/.../start_webxr.sh
+
+# 画面退回双目红外（老行为）。注意红外图会跟着 D435i 的投射器一亮一暗地闪
+G1_WEBXR_CAM=ir bash ~/ros2_手物距离/.../start_webxr.sh
+</code></pre>
+<p>页面上的参数用 URL 改，不用重启服务：</p>
+<pre><code class="language-text">https://192.168.3.78:8444/?dwell=1.2&amp;switchDwell=2.0&amp;debug=1
+</code></pre>
+<table>
+<thead>
+<tr><th>参数</th><th>默认</th><th>作用</th></tr>
+</thead>
+<tbody>
+<tr><td><code>dwell</code></td><td>0.9</td><td>首次锁定要盯多少秒</td></tr>
+<tr><td><code>switchDwell</code></td><td>1.35</td><td>换目标要盯多少秒（<strong>保持比 dwell 大</strong>）</td></tr>
+<tr><td><code>hold</code></td><td>1.0</td><td>目标被挡住后撑多久才判丢</td></tr>
+<tr><td><code>debug</code></td><td>关</td><td>左上角出调试面板（帧率、准星像素、目标状态）</td></tr>
+<tr><td><code>mock</code></td><td>关</td><td>不连机器人，用假数据 —— 机器人没电时也能调页面</td></tr>
+</tbody>
+</table>
+<h3 id="secvr7"><a class="anchor" href="#secvr7">#</a>出问题按这个顺序查</h3>
+<ol>
+<li><strong>左上角「版本」那一行</strong> —— 先确认不是缓存里的旧页面（推完前端要刷新）</li>
+<li><strong>没画面</strong> —— <code>tail /tmp/teleimager_rgb.log</code>。最常见是
+  <strong><code>/dev/video4</code> 被 <code>videohub_pc4</code> 占着</strong>，停它或者
+  <code>G1_WEBXR_CAM=ir</code> 退回红外</li>
+<li><strong>有画面但没有红边</strong> —— <code>tail /tmp/sam_seg.log</code>。engine 没加载
+  会明写出来；<strong>这时画面和距离仍然正常</strong>，不用去查链路</li>
+<li><strong>距离一直是 <code>--</code></strong> —— <code>tail /tmp/rng.log</code>，多半是 TF 或深度没上来</li>
+<li><strong>页面连不上</strong> —— <code>ss -ltn | grep -E '8444|8765'</code></li>
+</ol>
+<blockquote>
+<p>后台进程的 <code>print</code> 是<strong>块缓冲</strong>的，<code>/tmp/*.log</code> 一开始是空的
+<strong>不代表进程没起来</strong>。判断进程活没活看 <code>pgrep</code> 和端口，别看日志。</p>
+</blockquote>
+<h3 id="secvr8"><a class="anchor" href="#secvr8">#</a>engine 只在换模型时才需要重编</h3>
+<p>两个 TensorRT engine 已经编好存在机器人上（<code>~/图像分割/*.fp16.engine</code>），
+<strong>重启不用再编</strong>。真要重编：</p>
+<pre><code class="language-bash">cd ~/图像分割
+/usr/src/tensorrt/bin/trtexec --onnx=mobile_sam_encoder.onnx \
+    --saveEngine=mobile_sam_encoder.fp16.engine --fp16 --workspace=4096
+</code></pre>
+<blockquote>
+<p><strong>编码器要 22 分钟、解码器 7 分钟，而且 tactic 阶段完全不打日志。</strong>
+日志不动<strong>不等于</strong>卡死 —— 用 <code>top</code> 看 <code>trtexec</code> 是不是吃满一个核。
+engine <strong>必须在机器人上编</strong>，PC 上编的拿过去加载不了。</p>
+</blockquote>
+<hr />
+<h2 id="sec65"><a class="anchor" href="#sec65">#</a>7.4 · 没有机器人，只在仿真里跑</h2>
+<p>仿真监听同一个端口 9527，是真机的<strong>直接替身</strong>。上面任何一节都能用，改两处：</p>
+<p><strong>跳过所有终端 A 的步骤</strong>，换成：</p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/仿真
+.venv/bin/python g1_mujoco_sim.py
+</code></pre>
+<p><strong>终端 B 的目标改成本机</strong>：</p>
+<pre><code class="language-bash">    --udp-target 127.0.0.1:9527 \
+</code></pre>
+<p>其余（数据手套图形上位机、按键）完全一样。</p>
+<blockquote>
+<p>⚠️ 目标写成 <code>127.0.0.1</code> 而仿真没起，或者你其实想连真机 —— 都表现为
+<strong>机器人一动不动</strong>。按空格不动时先查这一条。</p>
+</blockquote>
+<hr />
+<h2 id="secrm0"><a class="anchor" href="#secrm0">#</a>7.5 · 更快响应（<code>--response-mode</code>）</h2>
+<p><strong>跟手不够、感觉手臂"拖"了一拍，先调这个，不要去调 IK。</strong></p>
+<p>上位机在方向向量上有一道<strong>自适应低通</strong>：动得慢时截止频率低（滤得狠、稳但迟钝），
+动得快时自动放开。<code>--response-mode</code> 换的就是这条曲线，<strong>除此之外不影响任何东西</strong>
+（发送端没有第二道平滑，机器人端一个字不用改）。</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>静止时截止</th>
+<th><strong>静止群延迟</strong></th>
+<th>快速运动截止</th>
+<th>运动群延迟</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>original</code>（默认）</td>
+<td>2 Hz</td>
+<td><strong>80 ms</strong></td>
+<td>10 Hz</td>
+<td>16 ms</td>
+</tr>
+<tr>
+<td><code>balanced</code></td>
+<td>4 Hz</td>
+<td><strong>40 ms</strong></td>
+<td>30 Hz</td>
+<td>5 ms</td>
+</tr>
+<tr>
+<td><code>fast</code></td>
+<td>8 Hz</td>
+<td><strong>20 ms</strong></td>
+<td>45 Hz</td>
+<td>3.5 ms</td>
+</tr>
+</tbody>
+</table>
+<p>对比一下别的环节：IK 中位 5 ms、IMU 数据年龄约 10 ms、50 Hz 发送量化 0~20 ms。
+<strong>慢速动作时这道滤波是最大的一项，是 IK 的 16 倍。</strong></p>
+<blockquote>
+<p>⚠️ 代价是平滑变少，IMU 抖动会更直接地传到机器人手臂上。
+<strong>链路不稳的时候别开</strong> —— 先按 10 章确认 <code>ping</code> 的 max &lt; 30 ms。
+建议顺序：<code>original</code> 标定并跑通 → 换 <code>balanced</code> → 还嫌迟钝再上 <code>fast</code>。
+一次只改这一个参数，别和别的改动叠在一起试。</p>
+</blockquote>
+<h3 id="secrm1"><a class="anchor" href="#secrm1">#</a>7.5.1 · 双臂 + 双手 + 腰 + 快速响应（= 7.1.1 + <code>--response-mode fast</code>）</h3>
+<p><strong>终端 A（板载机）</strong> —— 和 7.1.1 <strong>完全一样，一个字不用改</strong></p>
+<pre><code class="language-bash">cd ~/zh &amp;&amp; python3 hand_check.py --side right
+cd ~/zh &amp;&amp; python3 hand_check.py --side left
+</code></pre>
+<pre><code class="language-bash"># 正常模式（FSM 200，机器人站地上）
+~/zh/start.sh --hand both --hand-haptic --waist --hand-touch-hz 10
+</code></pre>
+<pre><code class="language-bash"># 调试模式（吊装）— 连问两次，都答 yes
+~/zh/start.sh --hand both --hand-haptic --waist --mode lowcmd --hand-touch-hz 10
+</code></pre>
+<p><strong>终端 B（PC）</strong> —— 只在 7.1.1 的基础上多了最后一行</p>
+<pre><code class="language-bash">pkill -f "[d]ual_arm_viz"
+/home/hong/unitree/最新直接能用的代码/PC端/.venv/bin/python \
+    /home/hong/unitree/最新直接能用的代码/PC端/dual_arm_viz.py \
+    --hand --hand-left --waist \
+    --udp-target 192.168.3.78:9527 \
+    --response-mode fast
+</code></pre>
+<p><strong>数据手套图形上位机（PC）</strong> —— 和 7.1.1 完全一样</p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/mhandpro
+./studio.sh
+</code></pre>
+<p>连接手套，选<strong>「双手」</strong> → 点<strong>「启动双手真机映射（100%）」</strong>
+→ 点<strong>「ARM 并启动」</strong>。</p>
+<p><strong>按键</strong>：<code>B</code> → 手臂跟随后 → <code>W</code> → <code>Shift+W</code></p>
+<h3 id="secrm2"><a class="anchor" href="#secrm2">#</a>7.5.2 · 双臂 + 双手 + 腰 + 平衡响应（中间档，抖的时候用这个）</h3>
+<p>终端 A 和 C 同上，<strong>只有终端 B 最后一行不同</strong>：</p>
+<pre><code class="language-bash">pkill -f "[d]ual_arm_viz"
+/home/hong/unitree/最新直接能用的代码/PC端/.venv/bin/python \
+    /home/hong/unitree/最新直接能用的代码/PC端/dual_arm_viz.py \
+    --hand --hand-left --waist \
+    --udp-target 192.168.3.78:9527 \
+    --response-mode balanced
+</code></pre>
+<h3 id="secrm3"><a class="anchor" href="#secrm3">#</a>怎么确认生效了</h3>
+<p>上位机启动日志里会打一行：</p>
+<pre><code>响应模式: 快速 (原始版同步 IK 链路)
+</code></pre>
+<p>三种分别显示 <code>原始平滑</code> / <code>平衡</code> / <code>快速</code>。没看到就是参数没吃进去。</p>
+<blockquote>
+<p>只跑单臂/不带手/不带腰时，把 <code>--hand --hand-left --waist</code> 按 4~6 章那一节改掉，
+<strong><code>--response-mode</code> 这一项加在最后就行，和其它参数互不影响</strong>。</p>
+</blockquote>
+<hr />
+<h1 id="sec66"><a class="anchor" href="#sec66">#</a>8 · 收工（所有组合通用）</h1>
+<p>按这个顺序，别跳：</p>
+<ol>
+<li><strong>数据手套图形上位机</strong> 点红色 <code>STOP</code>，再点「断开数据手套」并关闭窗口</li>
+<li><strong>终端 B</strong> 按 <code>Q</code></li>
+<li><strong>终端 A</strong> 按 <code>Ctrl+C</code> —— 会自动「手张开 → 手臂回零 → 交还控制权」</li>
+</ol>
+<hr />
+<h1 id="sec67"><a class="anchor" href="#sec67">#</a>9 · 参数表</h1>
+<h2 id="sec68"><a class="anchor" href="#sec68">#</a>9.1 · 终端 A（接收端）</h2>
+<p><code>~/zh/start.sh</code> + 下面挑几个：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--hand right\|left\|both</code></td>
+<td>加手。<strong>触觉要用就写 <code>both</code></strong>，否则只 bind 一个端口</td>
+</tr>
+<tr>
+<td><code>--hand-haptic</code></td>
+<td>触觉 TCP 外发（<strong>必须同时给 <code>--hand</code></strong>）。右 9201 / 左 9202；现仅供力反馈手套/其他机器人端消费者，数据手套图形上位机不连接</td>
+</tr>
+<tr>
+<td><code>--hand-touch-hz 10</code></td>
+<td>触觉读取频率，默认 5，<strong>本手册所有命令都给 10</strong>。手指顿的时候往下调，最低 <code>1</code></td>
+</tr>
+<tr>
+<td><code>--hand-only</code></td>
+<td><strong>完全不碰电机</strong>，只跑手，不用吊装，不管什么模式都能跑</td>
+</tr>
+<tr>
+<td>（不给 <code>--mode</code>）</td>
+<td><strong><code>armsdk</code></strong>：只写腰+双臂，腿不碰，<strong>机器人站地上</strong>，需要 FSM 200</td>
+</tr>
+<tr>
+<td><code>--mode lowcmd</code></td>
+<td>接管全部 29 个电机，<strong>机器人必须吊装</strong>，调试模式下只能用它</td>
+</tr>
+<tr>
+<td><code>--waist</code></td>
+<td>允许腰部跟随（上位机也要加）</td>
+</tr>
+<tr>
+<td><code>--hand-range 0.3</code></td>
+<td>手指行程 30%，抓不住但绝对安全。默认 1.0</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sec69"><a class="anchor" href="#sec69">#</a>9.2 · 终端 B（上位机）</h2>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--udp-target 192.168.3.78:9527</code></td>
+<td><strong>发到哪。写成 <code>127.0.0.1</code> 就是发给本机仿真</strong></td>
+</tr>
+<tr>
+<td><code>--hand</code></td>
+<td>启用<strong>右</strong>手</td>
+</tr>
+<tr>
+<td><code>--hand-left</code></td>
+<td>启用<strong>左</strong>手</td>
+</tr>
+<tr>
+<td><code>--waist</code></td>
+<td>发腰部尾块（接收端也要加）</td>
+</tr>
+<tr>
+<td><code>--real-hand right</code></td>
+<td>PC 直连灵巧手。<strong>走机器人端时绝对不要加</strong>，会争同一个寄存器</td>
+</tr>
+<tr>
+<td><code>--response-mode original|balanced|fast</code></td>
+<td>方向低通的响应曲线。默认 <code>original</code>（静止群延迟 80 ms），<code>balanced</code> 40 ms，<code>fast</code> 20 ms。<strong>跟手不够先调这个</strong>，见 <strong>7.5</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="sec70"><a class="anchor" href="#sec70">#</a>9.3 · 数据手套图形上位机</h2>
+<table>
+<thead>
+<tr>
+<th>启动/界面操作</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>./studio.sh</code></td>
+<td><strong>推荐入口</strong>：打开连接、标定、URDF 双手模型和真机映射界面</td>
+</tr>
+<tr>
+<td>连接数据手套</td>
+<td>启动 SDK 并显示左右手套状态</td>
+</tr>
+<tr>
+<td>五姿势映射</td>
+<td>对当前选择的右手/左手/双手进行映射标定，大窗口逐步提示姿势</td>
+</tr>
+<tr>
+<td>启动真机映射（100%）</td>
+<td>按当前选择的右手/左手/双手自动启动对应映射；必须在安全面板点「ARM 并启动」</td>
+</tr>
+<tr>
+<td>红色 <code>STOP</code></td>
+<td>停止输出并张手</td>
+</tr>
+<tr>
+<td>状态检查 / 20 秒链路检测</td>
+<td>在大型诊断面板中显示完整手套状态和链路结果</td>
+</tr>
+<tr>
+<td>断开数据手套</td>
+<td>安全退出 SDK 进程；关闭窗口前先停止真机映射</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sec71"><a class="anchor" href="#sec71">#</a>9.4 · 上位机按键</h2>
+<table>
+<thead>
+<tr>
+<th>键</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>R</code> / <code>L</code></td>
+<td>切换当前臂到右 / 左</td>
+</tr>
+<tr>
+<td><code>空格</code></td>
+<td>当前臂 跟随 / 暂停</td>
+</tr>
+<tr>
+<td><code>B</code></td>
+<td>双臂同时跟随 / 暂停</td>
+</tr>
+<tr>
+<td><code>Shift+C</code></td>
+<td><strong>只标定当前臂（7 步）</strong> —— 只戴一条臂的 IMU 时用这个</td>
+</tr>
+<tr>
+<td><code>C</code></td>
+<td>双臂 14 步标定（从右臂起，右臂 IMU 不在线时会自动改标左臂）</td>
+</tr>
+<tr>
+<td><code>X</code></td>
+<td>清除全部标定（<strong>两条臂一起清</strong>，慎按）</td>
+</tr>
+<tr>
+<td><code>W</code> / <code>Shift+W</code></td>
+<td>采腰部零位 / 腰部跟随开关</td>
+</tr>
+<tr>
+<td><code>[</code> / <code>]</code></td>
+<td>腰部增益 −0.1 / +0.1</td>
+</tr>
+<tr>
+<td><code>Q</code> / <code>ESC</code></td>
+<td>退出</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="sec72"><a class="anchor" href="#sec72">#</a>10 · 不动的时候按这个顺序查</h1>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>查什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>按空格手臂不动</strong></td>
+<td><strong>先看终端 A 状态行有没有 <code>RX:50Hz</code></strong>。没有 = 包没到，查 <code>--udp-target</code> 是不是漏了或写成了 <code>127.0.0.1</code>；有 = 包到了，看日志是不是「左臂: 跟随」</td>
+</tr>
+<tr>
+<td><strong>手臂完全不动，<code>g1_ctl.py</code> 全 <code>code=3102</code></strong></td>
+<td>调试模式，<code>armsdk</code> 没人消费。要么退出调试模式爬到 FSM 200，要么吊装加 <code>--mode lowcmd</code>。见 <strong>1.2</strong></td>
+</tr>
+<tr>
+<td><code>遥操未启动：无法连接 127.0.0.1:9103/9104</code></td>
+<td>终端 B 没起，或漏了 <code>--hand</code>/<code>--hand-left</code>。<code>ss -ltnp \| grep 910</code> 验证。连接是点图形安全面板的「ARM 并启动」时才建的，不重试</td>
+</tr>
+<tr>
+<td><strong>手指乱动/抽搐，但 PC 界面正常</strong></td>
+<td>板载机上有<strong>第二个接收端</strong>在跑，两个进程抢寄存器 1486。见 <strong>1.5</strong> 查旧进程</td>
+</tr>
+<tr>
+<td>另一台设备收不到触觉</td>
+<td><code>--hand</code> 写成单只了，要写 <code>both</code>。见 <strong>1.5</strong></td>
+</tr>
+<tr>
+<td><code>--hand-haptic需要同时给--hand</code></td>
+<td>就算只跑手臂也得给 <code>--hand both</code></td>
+</tr>
+<tr>
+<td>数据手套不再震动，也看不到 L1–L8</td>
+<td><strong>这是当前设计，不是故障。</strong>数据手套震动功能已移除；机器人端力反馈手套仍可使用 <code>--hand-haptic</code></td>
+</tr>
+<tr>
+<td>只有一只手动</td>
+<td>三处都要成对：A 的 <code>--hand both</code>、B 的 <code>--hand --hand-left</code>、数据手套界面必须选「双手」并启动「双手真机映射」</td>
+</tr>
+<tr>
+<td>手不动</td>
+<td>先跑 <code>hand_check.py</code>，它把「手能不能通」单独摘出来了</td>
+</tr>
+<tr>
+<td>手指动作一顿一顿</td>
+<td>触觉读在控制线程上，把 <code>--hand-touch-hz</code> 从 10 往下调，最低 <code>1</code></td>
+</tr>
+<tr>
+<td>手套报 <code>BAD_MAG</code></td>
+<td>在数据手套界面点「深度磁校准 75s（全部）」，做完手套关机重开。桌面校准拿到现场用反而更糟</td>
+</tr>
+<tr>
+<td>IMU 连不上</td>
+<td>PC 和 IMU 必须同一个 WiFi，发现走 UDP 4212 广播</td>
+</tr>
+<tr>
+<td>标定某步一直不开始采集</td>
+<td>界面那行「姿态离散 x.xx° / ≤5.0°」，超了就一直等。摆好姿势先停两秒再按 <code>C</code></td>
+</tr>
+<tr>
+<td>SSH <code>No route to host</code></td>
+<td>机器人断电或掉 WiFi。IP 走 DHCP 会变，见地址速查</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="sec73"><a class="anchor" href="#sec73">#</a>11 · 回滚：把标定质量门加回去</h1>
+<p>改一行，<code>PC端/dual_arm_viz.py</code> 里：</p>
+<pre><code class="language-python">CALIB_GATES_ENABLED = False      # ← 改成 True
+</code></pre>
+<p>原来四个阈值（推荐 30°/40°、硬上限 40°/50°）都留在源码里，拨回 <code>True</code> 自动生效，测试也不用改。</p>
+<p>⚠️ 质量门关着时，<strong>标坏的标定会直接覆盖标好的</strong>，没有任何拦截。
+<strong>每次重标之前先备份：</strong></p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/PC端
+cp imu_motor_calibration_left.json imu_motor_calibration_left.json.bak_$(date +%H%M)
+</code></pre>
+<p>回滚到某一份：</p>
+<pre><code class="language-bash">cd /home/hong/unitree/最新直接能用的代码/PC端
+ls imu_motor_calibration_*.bak_*
+cp imu_motor_calibration_left.json.bak_20260806_1620 imu_motor_calibration_left.json
+</code></pre>
+<hr />
+<h1 id="sec74"><a class="anchor" href="#sec74">#</a>12 · 地址速查</h1>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>板载机 SSH</td>
+<td><code>192.168.3.78</code>，用户 <code>unitree</code>，密码 <code>123</code></td>
+</tr>
+<tr>
+<td>因时<strong>右</strong>手 / <strong>左</strong>手</td>
+<td><code>192.168.123.211:6000</code> / <code>192.168.123.210:6000</code></td>
+</tr>
+<tr>
+<td>遥操指令</td>
+<td>UDP <strong>9527</strong></td>
+</tr>
+<tr>
+<td>手套 → 上位机，右 / 左</td>
+<td>TCP <strong>9103</strong> / <strong>9104</strong>（本机）</td>
+</tr>
+<tr>
+<td>触觉外发，右 / 左</td>
+<td>TCP <strong>9201</strong> / <strong>9202</strong>（仅供力反馈手套/机器人端消费者；数据手套上位机不连接）</td>
+</tr>
+<tr>
+<td>力控覆盖，右 / 左</td>
+<td>TCP <strong>9301</strong> / <strong>9302</strong></td>
+</tr>
+<tr>
+<td>IMU 四元数流 / 发现广播</td>
+<td>UDP <strong>4211</strong> / <strong>4212</strong></td>
+</tr>
+<tr>
+<td>机器人上的工作目录</td>
+<td><code>~/zh</code></td>
+</tr>
+</tbody>
+</table>
+</main>
+</div>
+<button id="theme" title="切换深浅色">◐</button>
+<button id="top" title="回到顶部">↑</button>
+<script>
+// 表格套横向滚动容器：宽表在窄屏上不能把整页撑横。
+document.querySelectorAll('#doc table').forEach(function(t){
+  var w = document.createElement('div');
+  w.className = 'tablewrap';
+  t.parentNode.insertBefore(w, t);
+  w.appendChild(t);
+});
+
+// 每个代码块加复制按钮 —— 这份文档就是拿来复制粘贴的。
+document.querySelectorAll('#doc pre').forEach(function(pre){
+  var b = document.createElement('button');
+  b.className = 'copy'; b.textContent = '复制';
+  b.addEventListener('click', function(){
+    var code = pre.querySelector('code');
+    navigator.clipboard.writeText(code ? code.innerText : pre.innerText).then(function(){
+      b.textContent = '已复制'; b.classList.add('done');
+      setTimeout(function(){ b.textContent = '复制'; b.classList.remove('done'); }, 1400);
+    });
+  });
+  pre.appendChild(b);
+});
+
+// ⚠️ 开头的引用块上色，扫一眼就知道哪条是安全相关的。
+document.querySelectorAll('#doc blockquote').forEach(function(q){
+  var t = q.innerText, i = t.indexOf('⚠');
+  if (i > -1 && i < 4) {
+    q.classList.add(/物理急停|吊装|夹伤|失效|覆盖/.test(t) ? 'dangerbox' : 'warnbox');
+  }
+});
+
+// 侧栏过滤：命中子项时把它所属的章标题一起留下，否则看不出在哪一章。
+var q = document.getElementById('q');
+var links = Array.prototype.slice.call(document.querySelectorAll('#side a'));
+q.addEventListener('input', function(){
+  var v = q.value.trim().toLowerCase();
+  if (v === '') { links.forEach(function(a){ a.classList.remove('hide'); }); return; }
+  var keep = links.map(function(a){ return a.dataset.t.indexOf(v) !== -1; });
+  var lastGroup = -1;
+  for (var i = 0; i < links.length; i++) {
+    if (links[i].classList.contains('nav-group')) lastGroup = i;
+    else if (keep[i] && lastGroup >= 0) keep[lastGroup] = true;
+  }
+  links.forEach(function(a, i){ a.classList.toggle('hide', !keep[i]); });
+});
+
+// 当前小节高亮
+var heads = Array.prototype.slice.call(
+  document.querySelectorAll('#doc h1[id],#doc h2[id],#doc h3[id]'));
+var byId = {};
+links.forEach(function(a){ byId[a.getAttribute('href').slice(1)] = a; });
+function sync(){
+  var y = window.scrollY + 90, cur = null;
+  for (var i = 0; i < heads.length; i++) {
+    if (heads[i].offsetTop <= y) cur = heads[i].id; else break;
+  }
+  links.forEach(function(a){ a.classList.remove('active'); });
+  if (cur && byId[cur]) {
+    var el = byId[cur], s = document.getElementById('side');
+    el.classList.add('active');
+    if (el.offsetTop < s.scrollTop || el.offsetTop > s.scrollTop + s.clientHeight - 40) {
+      s.scrollTop = el.offsetTop - s.clientHeight / 2;
+    }
+  }
+  document.getElementById('top').style.display = window.scrollY > 600 ? 'block' : 'none';
+}
+window.addEventListener('scroll', sync, {passive:true});
+sync();
+
+document.getElementById('top').addEventListener('click', function(){
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+// 深浅色：跟随系统，也可手动覆盖并记住
+var root = document.documentElement;
+var saved = localStorage.getItem('g1manual-theme');
+if (saved) root.setAttribute('data-theme', saved);
+document.getElementById('theme').addEventListener('click', function(){
+  var now = root.getAttribute('data-theme');
+  if (!now) now = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  var next = now === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  localStorage.setItem('g1manual-theme', next);
+});
+
+// 按 / 直接跳到搜索框
+document.addEventListener('keydown', function(e){
+  if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); }
+});
+</script>
+</body>
+</html>

@@ -1,3 +1,7 @@
 pymodbus==3.6.9
 dynamixel-sdk
 bleak
+
+# 树莓派上位机使用Raspberry Pi OS预编译包，不从pip编译：
+# sudo apt install python3-pyqt5 python3-pyqtgraph
+# 虚拟环境需用: python3 -m venv --system-site-packages .venv

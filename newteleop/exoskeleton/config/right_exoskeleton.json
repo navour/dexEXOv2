@@ -4,7 +4,7 @@
   "baudrate": 1000000,
   "protocol": 2.0,
   "servos": {
-    "1": {"finger": "thumb", "positive_position": "tighten", "position_direction_verified": false, "current_direction_verified": false},
+    "1": {"finger": "thumb", "positive_position": "tighten", "positive_current": "tighten", "position_direction_verified": true, "current_direction_verified": true},
     "2": {
       "finger": "index",
       "positive_position": "tighten",
@@ -12,8 +12,8 @@
       "position_direction_verified": true,
       "current_direction_verified": true
     },
-    "3": {"finger": "middle", "positive_position": "tighten", "position_direction_verified": true, "current_direction_verified": false},
-    "4": {"finger": "ring", "positive_position": "tighten", "position_direction_verified": false, "current_direction_verified": false},
-    "5": {"finger": "pinky", "positive_position": "tighten", "position_direction_verified": false, "current_direction_verified": false}
+    "3": {"finger": "middle", "positive_position": "tighten", "positive_current": "tighten", "position_direction_verified": true, "current_direction_verified": true},
+    "4": {"finger": "ring", "positive_position": "tighten", "positive_current": "tighten", "position_direction_verified": true, "current_direction_verified": true},
+    "5": {"finger": "pinky", "positive_position": "tighten", "positive_current": "tighten", "position_direction_verified": true, "current_direction_verified": true}
   }
 }

@@ -1,5 +1,11 @@
 # Codex 项目交接说明
 
+> **历史文档（已被取代）：**本文记录的是 2026-07-28 树莓派直连
+> mHandPro/INSPIRE 的左手台架阶段，不是当前 G1 双手联调架构。
+> 当前唯一操作入口请看 [`../newteleop/README.md`](../newteleop/README.md)，
+> 力控设计看
+> [`../newteleop/exoskeleton/HAPTIC_FEEDBACK_PLAN_CN.md`](../newteleop/exoskeleton/HAPTIC_FEEDBACK_PLAN_CN.md)。
+
 更新时间：2026-07-28  
 仓库根目录：`/home/cnn/桌面/dexexo/dexEXO`  
 当前主开发包：`newteleop/`
@@ -778,4 +784,3 @@ sudo poweroff
 13. **保持`newteleop`最小化。** G1、ROS、Gazebo、旧BLE弯曲控制和历史虚拟环境不要无选择迁入。
 14. **保留用户现有改动。** 仓库可能包含实验配置和实物标定数据；修改前检查 `git status`，不要重置或覆盖。
 15. **当前实测结论优先于过时注释，但必须回写配置。** 特别是左右MAC、舵机方向、模式和压力通道映射。
-

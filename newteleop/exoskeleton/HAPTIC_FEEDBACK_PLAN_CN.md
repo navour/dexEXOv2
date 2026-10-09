@@ -1,307 +1,191 @@
-# mHandPro + Inspire + 外骨骼力反馈实施方案
+# mHandPro + G1 INSPIRE + 外骨骼力控方案
 
-## 1. 结论先行
+> 版本：2026-09-01
+> 当前主路：INSPIRE 安装在 G1，mHandPro 接 Ubuntu，外骨骼与 FSR 接树莓派
+> 历史台架：`newteleop/mhandpro/standalone_inspire_bridge.py` 只用于树莓派网线直连单手，不参与 G1 联调
 
-### 1.1 最终接线
+## 1. 最终架构
 
 ```text
-mHandPro USB接收器 ──USB──► 树莓派
-Inspire左手 ──网线──► 树莓派 eth0 (192.168.123.100/24)
-左右外骨骼XL330 ──TTL转接板──► 树莓派 /dev/serial0
-开发电脑 ──Wi-Fi/SSH──► 树莓派 wlan0 (192.168.3.76)
+左/右 mHandPro（共用一个USB接收器）
+  -> Ubuntu: zh/mhandpro/mhandpro_diagnostic
+  -> TCP 9103/9104: zh/PC端/dual_arm_viz.py
+  -> UDP 9527: G1 zh/机器人端/robot_arm_receiver.py
+  -> G1 hand_driver.py 唯一占有左/右 INSPIRE Modbus
+       -> TCP 9201/9202 发布 INSPIRE top_touch
+       <- TCP 9301/9302 接收逐指力控覆盖
+
+左/右 STM32 FSR -> BLE -> 树莓派 9001/9002
+树莓派 dual_hand_force_test.py
+  -> /dev/serial0 -> XL330 ID 1..10
+  -> 9301/9302 -> G1 逐指 LOCKED/PID 覆盖
 ```
 
-集成运行时 Inspire 网线接树莓派，电脑只做 SSH 管理、日志查看和代码复制。
-只有回到 Ubuntu 电脑单独调试 Inspire 时，才临时把网线接回电脑并配置
-`192.168.123.100/24`。
+硬件所有权必须保持：
 
-### 1.2 当前能做什么
+| 硬件 | 唯一拥有者 |
+|---|---|
+| mHandPro USB 接收器 | Ubuntu 上的单个 `mhandpro_diagnostic` |
+| 右/左 INSPIRE Modbus | G1 `hand_driver.py` |
+| 双 BLE FSR | 树莓派 `ble_broker.py` |
+| XL330 ID 1～10 | 树莓派 `dual_hand_force_test.py` |
 
-当前可以实现“有界力提示”：
+不得同时运行两个能写同一硬件的进程。
+
+## 2. 旧代码保留了什么
+
+参考对象：
 
 ```text
-Inspire五指 top_touch 阵列接触力
-  → 基线扣除/滤波/归一化
-  → XL330模式5（有位置终点的限流收绳）
-  → 操作者感到手指继续弯曲受阻
+ftp/Force_handcontrol.py
+ftp/both_Force_handcontrol.py
+Five_finger_force_test/finger_force.py
+Five_finger_force_test/finger_force_v2.py
 ```
 
-它是受限的阻抗/馈通式力反馈，不是“操作者手指实际受力”的真正闭环。
+已复用：
 
-### 1.3 为什么当前不是真正闭环
+- 逐指 `FREE -> FORCE_ENTRY -> LOCKED -> RELEASE` 状态机。
+- INSPIRE 触觉驱动外骨骼收绳，舵机稳定后切模式5锁定。
+- `FSR操作者侧力 - INSPIRE机器人侧力` 的 LOCKED 位置 P 调节。
+- 单指电流上限、每手五指总电流上限、电流爬升率。
+- RELEASE 返回当次穿戴 INIT 位置。
+- 断流、通信错误、硬件错误、电流、电压、温度联锁。
 
-系统中存在两个已有内环：
+已替换：
 
-1. Inspire 可以使用自身指端传感器完成机器手接触/力控。
-2. XL330 内部可以闭环控制电流、位置或“限流位置”。
+- 旧 BLE 弯曲手套的动作输入已完全替换为 mHandPro。
+- 旧 Pi -> G1 DDS/TCP 手桥已替换为 `zh` 的 UDP 遥操尾块和 G1 原生 Modbus 手驱动。
+- 旧程序一个进程同时拥有手套、INSPIRE、BLE 和舵机的高耦合结构已拆开。
 
-但系统没有测量以下量：
+## 3. 力的定义
+
+软件统一指序：
 
 ```text
-外骨骼拉绳对操作者手指的实际力
+[0,1,2,3,4] = [拇指,食指,中指,无名指,小指]
 ```
 
-mHandPro 提供姿态/骨骼旋转，不提供指尖力。XL330 的实际电流只能粗略反映电机转矩，
-还混有齿轮摩擦、卷线轮半径、拉绳摩擦、惯性和手指位姿影响，不能直接当成准确的手指力。
+INSPIRE 六角度槽指序是 `[小,无,中,食,拇弯,拇对掌]`，因此五指对应
+角度槽 `[4,3,2,1,0]`。
 
----
+两类力：
 
-## 2. 旧力控代码如何复用
+- `F_robot`：G1 上 INSPIRE top_touch 经实验线性式换算的机器人指端力。
+- `F_operator`：外骨骼 FSR 数据。INIT 采集绑带静态预载，闭环使用新增力。
 
-可参考的旧实现：
+现有 STM32 输出存在约 4.903 N 低端，因此代码的反馈量为：
 
 ```text
-../../ftp/Force_handcontrol.py
-../../ftp/both_Force_handcontrol.py
-../../Five_finger_force_test/finger_force.py
-../../Five_finger_force_test/finger_force_v2.py
+fsr_excess = max(0, fsr_raw - fsr_init_preload - preload_deadband)
+F_operator = 0                         , fsr_excess == 0
+F_operator = 4.903 + fsr_excess        , fsr_excess > 0
 ```
 
-可复用的思路：
+这不等于高精度拉绳张力。FSR 对预紧、接触面积和手指曲率敏感，
+可以完成当前人手侧力闭环和释放判断，但需要逐指标定和重复性验收。
+如需要精确的拉绳力，应在每根拉绳上串联张力传感器。
 
-- 五指独立状态机：`GLOVE/FREE → FORCE_ENTRY/CONTACT → LOCKED/HOLD → RELEASE`。
-- 目标力和反馈力的低通滤波、死区和滞回。
-- 单舵机电流上限、五指总电流上限。
-- 释放回佩戴初始位置。
-- 断线、Ctrl+C 和异常退出时清零/关扭矩。
-- Inspire 六通道与五个外骨骼舵机的映射。
-
-不能直接复制的部分：
-
-- 旧 BLE 手套的弯曲和指尖/外骨骼触觉解析。
-- 依赖旧手套五路力值的 PID 外环。
-- 未经当前机械验证的正负号、初始位置和电流参数。
-- 旧代码中 150～450 级别的电流参数；不得直接用于首次佩戴。
-
----
-
-## 3. 新运行架构
-
-### 3.1 进程与端口
+## 4. 状态机
 
 ```text
-mhandpro_diagnostic
-  └──六维角度JSON──TCP 127.0.0.1:9102──► standalone_inspire_bridge
-                                                        ├──Modbus写ANGLE_SET──► Inspire
-                                                        └──Modbus读五组top_touch
-                                                                   │
-                                                                   ▼
-                                                 本机力数据流 127.0.0.1:9202
-                                                                   │
-                                                                   ▼
-                                                   force_control/left_index_force_test
-                                                                   │
-                                                          /dev/serial0
-                                                                   ▼
-                                                        XL330 ID 6～10
-```
-
-设计约束：
-
-- `standalone_inspire_bridge` 是 Modbus TCP 的唯一拥有者，同时写角度并读力。
-- `force_control/left_index_force_test.py` 是 Dynamixel 串口的唯一拥有者。
-- 力数据必须含时间戳和序号，不允许用旧数据持续施力。
-- 运行力反馈时不能同时运行点动、电流脉冲或其他 Dynamixel 工具。
-
-### 3.2 映射
-
-```text
-Inspire top_touch摘要: [拇指, 食指, 中指, 无名指, 小指]
-
-拇指       channel 0 → 左手ID 6
-食指       channel 1 → 左手ID 7
-中指       channel 2 → 左手ID 8
-无名指   channel 3 → 左手ID 9
-小指       channel 4 → 左手ID 10
-```
-
-每指对应一组12x8 top_touch阵列，首版复用旧代码取各阵列最大值。
-
----
-
-## 4. 近期方案：有边界的开环/阻抗式力提示
-
-### 4.1 Inspire 信号处理
-
-对每个通道采集空载基线 `b` 和噪声，然后计算：
-
-```text
-delta = raw - baseline
-```
-
-接触阈值不写死，由实测得到：
-
-```text
-contact_on  > 空载噪声上界
-contact_off < contact_on             # 滞回，防止反复开关
-force_full  = “明显但安全的指尖接触”实测值
-```
-
-归一化强度：
-
-```text
-s = clamp((delta - contact_on) / (force_full - contact_on), 0, 1)
-s_filtered = s_filtered + alpha * (s - s_filtered)
-```
-
-初期 `alpha` 取 0.1～0.2，阈值必须使用
-`tools/inspire_force_monitor.py` 的实测数据确定。
-
-### 4.2 外骨骼执行策略
-
-首版使用 XL330 模式 5（Current-based Position Control）：
-
-- 目标位置限制“最多收多少绳”。
-- Goal Current 限制“最大允许转矩”。
-- 释放时返回当次佩戴的 `neutral_position`。
-- 回到基准附近后关闭扭矩。
-
-不使用模式 0 作为首版佩戴控制，因为纯电流模式没有位置终点，空载小电流也会持续卷绳。
-
-### 4.3 每指状态机
-
-```text
+STOP
+  | INIT只读采集返回位和FSR预载，人工ARM
+  v
 FREE
-  扭矩关闭，位置在neutral附近
-    │ top_touch换算力连续多帧高于contact_on
-    ▼
-CONTACT_ENTRY
-  模式5，先写当前位置，电流从0缓慢爬升
-    ▼
-HOLD
-  目标位置不超过neutral + max_travel
-  电流限制随s_filtered缓慢变化
-    │ top_touch换算力持续低于contact_off
-    ▼
+  | F_robot >= contact_on
+  v
+FORCE_ENTRY
+  | 模式0限流收绳；位置稳定
+  v
+LOCKED
+  | 外骨骼模式5锁位
+  | 树莓派向G1发 position_step = clamp(Kp*(F_operator-F_robot))
+  | INSPIRE触觉释放，或FSR已加载后持续卸载
+  v
 RELEASE
-  低电流返回neutral
-    │ 进入neutral容差
-    ▼
-FREE（关扭矩）
+  | 模式0反向电流返回init_pos
+  v
+RETURN_SETTLE
+  | 模式5保持，位置与INSPIRE释放连续稳定
+  +----> FREE
 ```
 
----
-
-## 5. 真正力闭环方案
-
-### 5.1 推荐传感器位置
-
-优先在每根外骨骼拉绳上串联小型张力/拉力传感器，而不是改造 mHandPro 指尖：
+FORCE_ENTRY 外骨骼请求电流：
 
 ```text
-XL330卷线轮 ── 拉绳 ── 张力传感器 ── 外骨骼手指
+I_request = min(F_robot * force_to_current_gain, max_goal_current)
 ```
 
-优点：
+当前双手联调值为 `60 raw/N`、最大 `300 raw`，每手收绳电流总和上限
+`800 raw`。这是已进入实物试验的参数，不是任意新机构的安全默认值。
 
-- 直接测量外骨骼施加的拉力。
-- 不占用 mHandPro 指尖空间，不影响姿态测量。
-- 不依赖操作者指尖是否正好压在某个触觉片上。
-- 可对每根绳独立标定牛顿值。
+## 5. 跨机协议
 
-指尖 FSR/薄膜压力传感器可作为次选，但它对接触位置、预紧、温漂和手指曲率更敏感。
+### G1 -> Pi，9201/9202
 
-### 5.2 真闭环结构
+换行 JSON：
 
-```text
-Inspire指端力 → 舒适缩放/限幅 → 操作者目标力 F_target
-                                              │
-                                              ▼
-                           error = F_target - F_tendon_measured
-                                              │
-                                   PI/PID + 反饱和 + 速率限制
-                                              │
-                                              ▼
-                                   XL330 Goal Current/目标位置
+```json
+{
+  "type": "inspire_feedback",
+  "hand": "right",
+  "seq": 1,
+  "top_touch_order": ["拇指", "食指", "中指", "无名指", "小指"],
+  "top_touch_raw_max": [0, 0, 0, 0, 0],
+  "top_touch_force_n": [0.0, 0.0, 0.0, 0.0, 0.0],
+  "touch_valid": true
+}
 ```
 
-不建议机器端和人手端做 1:1 力复制。应设置舒适缩放、起感阈值、最大人手力和力变化率。
+### Pi -> G1，9301/9302
 
----
+```json
+{
+  "type": "haptic_override",
+  "finger_states": ["FREE", "LOCKED", "FREE", "FREE", "FREE"],
+  "finger_steps": [0.0, 2.0, 0.0, 0.0, 0.0]
+}
+```
 
-## 6. 分阶段实施与验收
+G1 的 0.5 s 覆盖看门狗超时后清空所有 LOCKED 状态，恢复手套跟随。
 
-### 阶段 A：Inspire 触觉只读标定（当前下一步）
+## 6. 安全联锁
 
-1. 外骨骼扭矩保持关闭。
-2. 运行 `mhandpro/tools/inspire_force_monitor.py`。
-3. 采集六路空载基线和噪声。
-4. 分别轻压小指、无名指、中指、食指和拇指。
-5. 记录轻触、中等接触和释放值。
+- 上电默认 STOP；没有 `--enable-write` 不能 ARM。
+- 两手的舵机、FSR、INSPIRE 数据和 INIT 必须全部就绪才能双手 ARM。
+- 任一指 Dynamixel 通信、硬件错误、实际电流、电压或温度越界会联锁十指 STOP。
+- FSR 和 INSPIRE 任一数据超时会 FAULT。
+- RELEASE 不因新接触中断，必须先完成安全返回。
+- 9301/9302 断开只会让 G1 恢复 mHandPro 跟随，不允许留下锁定角度。
+- SIGINT、SIGTERM、正常退出和异常共用清电流/关扭矩路径。
+- 软件 STOP 不代替物理断电。
 
-验收：通道映射明确，接触与空载可分，释放后能回到基线附近。
+## 7. 分阶段验收
 
-### 阶段 B：桥接力数据输出
+1. 双 BLE/FSR 只读：逐指确认左右手和五通道。
+2. G1 双 INSPIRE 触觉只读：9201/9202 帧率、指序、空载与按压可分。
+3. 未穿戴单指：从低电流验证收绳方向、锁定、释放和断电。
+4. 未穿戴单手五指：逐指后再多指，验证每手总电流缩放。
+5. 未穿戴双手：单进程 ID 1～10，任一故障十指联锁。
+6. mHandPro + 双 INSPIRE + 双外骨骼：先逐指，再单手多指，最后双手。
+7. 只有手部闭环稳定后才加 G1 手臂，腰部最后加。
 
-1. 扩展 `standalone_inspire_bridge.py`，以5 Hz读取五组 `top_touch` 阵列并发布摘要。
-2. 在树莓派本机发布含序号、时间戳和六路 raw 的 JSON。
-3. 力读取失败不影响桥接执行安全张手，但必须通知力控程序进入 FAULT。
+具体命令和停机顺序见 [`../README.md`](../README.md)。
 
-验收：遥操灵巧手时能同时稳定收到力数据，无数据时不会留下旧力命令。
+## 8. 当前验证状态
 
-### 阶段 C：未穿戴的左食指模式5安全执行器
+代码/无硬件已验证：
 
-1. 只启用左食指 ID 7。
-2. 加载 `left_neutral.json`。
-3. 确认 ID 7 正位置方向为收绳。
-4. 从非常小的 `max_travel` 和 Goal Current 开始。
-5. 用人工注入的 0～1 强度信号验证收绳、保持、释放和 STOP。
+- 双 BLE broker 的左右 MAC 与 9001/9002 参数组合。
+- 双手 ARM 前置拒绝和明确错误输出。
+- FSR 必须先加载再卸载的两阶段滞回。
+- G1 Modbus 帧、手部换算、断流张手和 Haptic Override 纯逻辑测试。
+- Python 语法检查和只读上位机 HTTP 接口。
 
-验收：位置永远不越过软边界，通信中断和 Ctrl+C 会清零并关扭矩。
+仍需实物分阶段验证：
 
-### 阶段 D：佩戴左食指低强度实验
-
-1. 重新采集当次佩戴的 neutral。
-2. 只打开 ID 7，其他舵机保持扭矩关闭。
-3. 先用人工强度，再接 Inspire 食指 `fingerfour_top_touch`。
-4. 每次只提高一档电流或行程，不同时改两个参数。
-5. 反复验证 STOP、拔网线、停止手套数据和松开物体。
-
-验收：只在 Inspire 食指接触时感到柔和阻力，释放时及时放松，任意断线不会持续收绳。
-
-### 阶段 E：逐指扩展
-
-1. 依次验证 ID 8、9、10、6 的收放方向和位置边界。
-2. 每增加一指都重做单指断线/释放验证。
-3. 最后才开启五指总电流限制和同时接触。
-
-### 阶段 F：加入张力传感器的真闭环
-
-1. 为每根拉绳安装并标定张力传感器。
-2. 设置硬件过力保护，不只依赖 Python。
-3. 从 P 控制开始，确认稳定后再加 I；非必要不加 D。
-4. 实测不同手指姿态下的绳力与人体舒适度。
-
----
-
-## 7. 必须实现的安全看门狗
-
-- Inspire top_touch 超时：进入 RELEASE/FAULT。
-- mHandPro 姿态帧超时：进入 RELEASE/FAULT。
-- Dynamixel 通信失败：目标电流清零，尝试关扭矩。
-- 位置超过 `neutral + max_travel + tolerance`：立即 FAULT。
-- 实际电流、温度或电压异常：立即 FAULT。
-- 力命令爬升率限制：不允许从 0 一帧跳到最大值。
-- 单指和五指总电流限制。
-- 必须有 `ARM`/`STOP` 状态，默认上电是 STOP。
-- SIGINT、SIGTERM、异常和正常退出共用同一个清理路径。
-- 调试时保持物理断电手段在手边；软件 STOP 不代替硬件断电。
-
----
-
-## 8. 当前已验证与待验证
-
-已验证：
-
-- 树莓派可同时连接 Inspire、mHandPro 和 10 个 XL330。
-- 左手 ID 6～10 只读 Ping 正常。
-- 左食指 ID 7 正位置方向为收绳，模式3点动可返回并恢复模式5。
-- 左手佩戴零力基准已稳定采集。
-
-待验证：
-
-- Inspire 五组top_touch阵列的空载噪声、接触位置和有效范围。
-- 左手 ID 6、8、9、10 的收放方向。
-- 模式5下安全的最小可感电流和行程。
-- 力数据断线后的自动释放。
-- 加入张力传感器后的人手侧真力闭环。
+- 十个舵机在 10 Hz 长时运行时的TTL丢包、供电压降和温升。
+- 双手 FSR 在实际穿戴预紧下的逐指重复性和交叉耦合。
+- `300 raw`、每手 `800 raw` 在实际绳路上的人体舒适边界。
+- 双手同时接触、逐指解锁和各类断线注入。

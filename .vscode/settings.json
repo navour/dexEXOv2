@@ -12,7 +12,10 @@
       "ARDUINO_ARCH_AVR",
       "ARDUINO_AVR_MEGA2560"
     ],
-    "files.associations": { "*.ino": "cpp" }
+    "files.associations": {
+      "*.ino": "cpp"
+    },
+    "cmake.sourceDirectory": "/home/cnn/桌面/dexexo/dexEXO/ftp/inspire_hand_ws/inspire_hand_sdk"
 
   }
   

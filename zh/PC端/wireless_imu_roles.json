@@ -1,0 +1,13 @@
+{
+  "chest_node_id": "949550",
+  "right_upper_node_id": "9495B4",
+  "right_forearm_node_id": "9495B8",
+  "left_upper_node_id": "949534",
+  "left_forearm_node_id": "949640",
+  "chest_fixed_id": "chest",
+  "right_upper_fixed_id": "right_upper_arm",
+  "right_forearm_fixed_id": "right_forearm",
+  "left_upper_fixed_id": "left_upper_arm",
+  "left_forearm_fixed_id": "left_forearm",
+  "timestamp": "2026-08-28 10:58:52"
+}

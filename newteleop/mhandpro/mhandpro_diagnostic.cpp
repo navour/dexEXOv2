@@ -270,6 +270,15 @@ double project_one_axis(const DirectionFeature& value, const DirectionFeature& a
     return std::clamp(feature_dot(value, axis) / denominator, 0.0, 1.0);
 }
 
+// 四指屈曲只关心沿标定轴的幅度。接近180度时，四元数的等价
+// 表示可使旋转向量整体反号；若使用有符号投影，真实屈曲会被夹到0。
+double project_flex_magnitude(const DirectionFeature& value,
+                              const DirectionFeature& axis) {
+    const double denominator = feature_dot(axis, axis);
+    if (denominator < 25.0) return 0.0;
+    return std::clamp(std::abs(feature_dot(value, axis)) / denominator, 0.0, 1.0);
+}
+
 // 同时在“弯曲”和“侧摆/对掌”两个可能不正交的标定方向上做最小二乘分解。
 std::array<double, 2> project_two_axes(const DirectionFeature& value,
                                       const DirectionFeature& first,
@@ -493,7 +502,7 @@ void print_help() {
         << "  show                显示当前关节角和解耦后的六维命令\n"
         << "  vectors             显示每个关节的有向旋转向量 [rx ry rz]\n"
         << "  monitor             以 5 Hz 连续显示 10 秒\n"
-        << "  teleop [配置]       以30Hz、最大30%行程控制Inspire，默认 config/inspire_left.cfg\n"
+        << "  teleop [配置]       按配置的频率和行程限制控制Inspire\n"
         << "  help                显示本帮助\n"
         << "  quit                断开手套并退出\n"
         << "=====================================================\n\n";
@@ -565,7 +574,7 @@ std::array<double, 6> compute_command(const RelativeSet& current,
                 command[out] = project_one_axis(value, model.flex_axis[f]);
             }
         } else {
-            command[out] = project_one_axis(value, model.flex_axis[f]);
+            command[out] = project_flex_magnitude(value, model.flex_axis[f]);
         }
     }
     const DirectionFeature thumb = directional_feature(model.open, current, 0);
@@ -1016,9 +1025,13 @@ int main(int argc, char** argv) {
                     int f = target == "index" ? 1 : target == "middle" ? 2
                           : target == "ring" ? 3 : 4;
                     model.flex_axis[f] = directional_feature(model.open, pose, f);
-                    model.have_flex[f] = true;
-                    std::cout << "已完成" << (f==1?"食指":f==2?"中指":f==3?"无名指":"小指")
-                              << "独立弯曲标定。\n";
+                    const double amplitude = feature_norm(model.flex_axis[f]);
+                    model.have_flex[f] = amplitude >= 5.0;
+                    std::cout << (model.have_flex[f] ? "已完成" : "标定失败：")
+                              << (f==1?"食指":f==2?"中指":f==3?"无名指":"小指")
+                              << "独立弯曲有效幅度=" << std::fixed
+                              << std::setprecision(1) << amplitude << "度"
+                              << (model.have_flex[f] ? "。\n" : "，小于5度，请重新标定。\n");
                 } else if (target == "spread") {
                     static const char* finger_names[5] = {"拇指", "食指", "中指", "无名指", "小指"};
                     for (int f = 1; f < 5; ++f) {

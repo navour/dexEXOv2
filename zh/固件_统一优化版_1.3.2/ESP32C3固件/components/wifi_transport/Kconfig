@@ -1,0 +1,15 @@
+menu "VQF WiFi Transport"
+
+    config WIFI_SSID
+        string "WiFi SSID"
+        default ""
+        help
+            要连接的 WiFi 热点名称
+
+    config WIFI_PASSWORD
+        string "WiFi Password"
+        default ""
+        help
+            WiFi 热点密码
+
+endmenu
