@@ -85,4 +85,4 @@ BLE 子进程管理、G1 数据连接、五个安全命令与 ARM 门控。
 - broker 发布重连次数，在底层稳定支持时增加 RSSI，但 RSSI 不参与 ARM。
 - 树莓派 `.desktop` 桌面启动器与开机后手动确认启动。
 
-安装、启动和操作见 [`LOCAL_SUPERVISOR_CN.md`](LOCAL_SUPERVISOR_CN.md)。
+安装、启动和操作见 [`LOCAL_SUPERVISOR_CN.md`](supervisor/LOCAL_SUPERVISOR_CN.md)。

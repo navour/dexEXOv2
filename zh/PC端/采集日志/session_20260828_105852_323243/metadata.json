@@ -1,0 +1,16 @@
+{
+  "format_version": 1,
+  "started_at": "2026-08-28T10:58:52.323",
+  "finished_at": "2026-08-28T11:23:00.002",
+  "duration_sec": 1447.6788372900005,
+  "imu_rows": 0,
+  "control_rows": 39891,
+  "event_rows": 13,
+  "dropped_log_records": 0,
+  "estimated_missing_packets": {},
+  "files": {
+    "imu": "imu_packets.csv",
+    "control": "control.csv",
+    "events": "events.log"
+  }
+}

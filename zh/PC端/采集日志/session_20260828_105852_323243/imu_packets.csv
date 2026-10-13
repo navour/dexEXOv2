@@ -1,0 +1,1 @@
+host_time_iso,host_unix_s,receive_monotonic_s,receive_age_ms,node_id,device_id,role,connected,seq,sensor_timestamp_us,qw,qx,qy,qz,gyro_x_dps,gyro_y_dps,gyro_z_dps,rest,pkt_rate_hz,battery_voltage,battery_percent
